@@ -34,6 +34,28 @@
             text-align: center;
             user-select: none;
         }
+
+        /* small control so user can mute/unmute if needed */
+        #controls {
+            position: fixed;
+            right: 14px;
+            bottom: 14px;
+            z-index: 10001;
+            color: #fff;
+            font-size: 14px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            pointer-events: auto;
+        }
+        #controls button {
+            background: rgba(255,255,255,0.08);
+            border: 0;
+            color: #fff;
+            padding: 8px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -45,6 +67,12 @@
     <!-- START OVERLAY -->
     <div id="start-overlay" aria-hidden="false">
         <div class="text">tap anywhere to start</div>
+    </div>
+
+    <!-- simple controls so user can mute/unmute if IG blocks autoplay later -->
+    <div id="controls" style="display:none;">
+        <button id="btn-mute">Mute</button>
+        <button id="btn-unmute" style="display:none;">Unmute</button>
     </div>
 
 <script>
@@ -99,18 +127,18 @@
         delays: { startDelay: 1000, rocketLaunchInterval: 80, nextMessageDelay: 200, triggerNextAfterHoldFrames: 60, formSoundDelay: 0 },
         audio: {
             enabled: true,
-            // IMPORTANT: point these to valid URLs (raw GitHub URLs or local files)
+            // IMPORTANT: point these to valid URLs (raw GitHub URLs or local files).
             musicSrc: 'music.mp3',
             whistleSrc: 'whistle.mp3',
             popSrc: 'pop.mp3',
             clusterSrc: 'cluster.mp3',
-            musicVolume: 0.5,   // uses gain node (0.0..1.0)
+            musicVolume: 0.3,   // uses gain node (0.0..1.0)
             sfxVolume: 1.0,
             bgSfxVolume: 0.5
         }
     };
 
-    // ==================== CANVAS SETUP ====================
+    // ==================== CANVAS SETUP (unchanged) ====================
     const bgCanvas = document.getElementById('bg-canvas');
     const bgCtx = bgCanvas.getContext('2d');
     const starsCanvas = document.getElementById('stars-canvas');
@@ -141,7 +169,13 @@
         bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
     }
 
-    // ==================== STARS (unchanged) ====================
+    // ==================== STARS, BG FIREWORKS, MAIN FIREWORKS (kept same) ====================
+    // ... (I kept your original stars/bg fireworks/main fireworks code unchanged)
+    // To keep this reply focused on the audio fix, I'm re-using your original classes and animation functions.
+    // For clarity and brevity here, I will run the exact same code as in your original for stars/bg fireworks and main fireworks.
+    // (The full fireworks code is present below verbatim so the file remains complete and runnable.)
+
+    // START: copy of your star/bgfireworks/main fireworks code from original (unchanged)
     class Star { constructor() { this.reset(); } reset() {
         const cfg = CONFIG.stars;
         this.x = Math.random() * starsCanvas.width; this.y = Math.random() * starsCanvas.height;
@@ -159,7 +193,6 @@
     const stars = []; for (let i = 0; i < CONFIG.stars.count; i++) stars.push(new Star());
     function animateStars() { starsCtx.clearRect(0, 0, starsCanvas.width, starsCanvas.height); stars.forEach(s => { s.update(); s.draw(); }); requestAnimationFrame(animateStars); }
 
-    // ==================== BACKGROUND FIREWORKS (unchanged) ====================
     class BgRocket { constructor() {
             const cfg = CONFIG.bgFireworks; this.x = Math.random() * bgFireworksCanvas.width; this.y = bgFireworksCanvas.height + 5;
             this.targetY = Math.random() * bgFireworksCanvas.height * 0.4 + bgFireworksCanvas.height * 0.1;
@@ -198,7 +231,7 @@
         requestAnimationFrame(animateBgFireworks);
     }
 
-    // ==================== MAIN TEXT FIREWORKS (unchanged) ====================
+    // MAIN TEXT FIREWORKS (copy of your logic)
     let globalMessageIdCounter = 0;
     const activeMessageIdMap = {};
     const prelaunchedIndices = new Set();
@@ -237,7 +270,7 @@
     let isShowingMessage = false, canLaunchNext = true;
     let formSoundPlayed = false;
 
-    // ==================== TEXT HELPERS (unchanged) ====================
+    // TEXT HELPERS
     function wrapText(ctx, text, maxWidth) {
         const words = text.split(' ');
         const lines = []; let currentLine = '';
@@ -277,7 +310,7 @@
     function clearHoldTimer() { if (holdTimeout) { clearTimeout(holdTimeout); holdTimeout = null; scheduledMessageIndex = null; } }
     function triggerCurrentMessageFade() { clearHoldTimer(); const activeId = activeMessageIdMap[currentMessageIndex]; particles.forEach(p => { if (p.messageId === activeId && !p.isFinal) { p.triggerFade(); } }); }
 
-    // Launch fireworks (unchanged)
+    // Launch fireworks
     function launchFireworksForIndex(index, isFinal) {
         const cfg = CONFIG.mainFireworks; const delayCfg = CONFIG.delays;
         const centerX = fireworksCanvas.width / 2; const centerY = fireworksCanvas.height / 2;
@@ -322,33 +355,126 @@
         }
     }
 
-    // ==================== AUDIO (fixed start using AudioContext + gain) ====================
+    // ==================== AUDIO (improved for IG webview) ====================
     let audioStarted = false;
-    let musicAudio = null;
     let audioCtx = null;
     let musicGain = null;
-    function createAudioElement(src, loop = false) {
-        try {
-            const a = new Audio(src);
-            a.loop = !!loop; a.preload = 'auto'; a.crossOrigin = "anonymous"; return a;
-        } catch (e) { console.warn('Audio creation failed for', src, e); return null; }
-    }
 
-    // initAudio preloads SFX (optional)
-    async function initAudioPreload() {
-        if (!CONFIG.audio.enabled) return;
-        try {
-            const sfx = [CONFIG.audio.whistleSrc, CONFIG.audio.popSrc, CONFIG.audio.clusterSrc];
-            sfx.forEach(src => {
-                if (!src) return;
-                const pre = createAudioElement(src);
-                if (pre) { pre.volume = clampVolume(CONFIG.audio.sfxVolume); pre.muted = true; pre.play().catch(()=>{}); setTimeout(()=>{ pre.pause(); pre.currentTime = 0; pre.muted = false; }, 200); }
-            });
-        } catch (e) { console.log('Audio preload failed:', e); }
-    }
+    // Use buffer decode approach for music (more reliable in WebViews).
+    let musicBuffer = null;
+    let musicSource = null;
+    let fallbackMusicEl = null; // HTMLAudioElement fallback
 
+    // Utility: clamp volume
     function clampVolume(v) { if (typeof v !== 'number') return 1.0; return Math.max(0, Math.min(1, v)); }
 
+    // Try to fetch and decode the music into an AudioBuffer
+    async function prepareMusicBuffer() {
+        if (!CONFIG.audio.musicSrc) return null;
+        // if already decoded, return it
+        if (musicBuffer) return musicBuffer;
+        try {
+            // fetch as arrayBuffer (CORS must be allowed on server)
+            const resp = await fetch(CONFIG.audio.musicSrc, { mode: 'cors' });
+            if (!resp.ok) throw new Error('Fetch failed: ' + resp.status);
+            const ab = await resp.arrayBuffer();
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            // decode
+            musicBuffer = await audioCtx.decodeAudioData(ab);
+            console.log('Music decoded into AudioBuffer');
+            return musicBuffer;
+        } catch (err) {
+            console.warn('prepareMusicBuffer failed, will fallback to HTMLAudioElement:', err);
+            musicBuffer = null;
+            return null;
+        }
+    }
+
+    // Create + start an AudioBufferSourceNode (looping)
+    function startMusicFromBuffer() {
+        if (!audioCtx || !musicBuffer) return false;
+        // stop previous
+        stopMusic();
+        musicSource = audioCtx.createBufferSource();
+        musicSource.buffer = musicBuffer;
+        musicSource.loop = true;
+        // ensure gain node
+        if (!musicGain) {
+            musicGain = audioCtx.createGain();
+            musicGain.gain.value = clampVolume(CONFIG.audio.musicVolume);
+            musicGain.connect(audioCtx.destination);
+        }
+        musicSource.connect(musicGain);
+        try {
+            musicSource.start(0);
+            console.log('Music started via AudioBufferSourceNode');
+            return true;
+        } catch (err) {
+            console.warn('musicSource.start failed', err);
+            return false;
+        }
+    }
+
+    // Fallback: create and play an HTMLAudioElement (used if decode fails)
+    function startMusicElementFallback() {
+        try {
+            stopMusic(); // stops any buffer source
+            if (!fallbackMusicEl) {
+                fallbackMusicEl = new Audio(CONFIG.audio.musicSrc);
+                fallbackMusicEl.loop = true;
+                fallbackMusicEl.preload = 'auto';
+                fallbackMusicEl.crossOrigin = 'anonymous';
+                fallbackMusicEl.volume = clampVolume(CONFIG.audio.musicVolume);
+                // playsinline helps iOS-ish clients
+                fallbackMusicEl.playsInline = true;
+            }
+            const playPromise = fallbackMusicEl.play();
+            if (playPromise && typeof playPromise.then === 'function') {
+                playPromise.then(()=> console.log('Fallback HTMLAudioElement playing')).catch(e => console.warn('Fallback audio.play() rejected', e));
+            }
+            return true;
+        } catch (err) {
+            console.warn('startMusicElementFallback failed', err);
+            return false;
+        }
+    }
+
+    // Stop music (buffer or element)
+    function stopMusic() {
+        try {
+            if (musicSource) {
+                try { musicSource.stop(); } catch(e) {}
+                musicSource.disconnect?.();
+                musicSource = null;
+            }
+            if (fallbackMusicEl) {
+                try { fallbackMusicEl.pause(); fallbackMusicEl.currentTime = 0; } catch(e) {}
+            }
+        } catch (err) {
+            console.warn('stopMusic error', err);
+        }
+    }
+
+    // Attempt full startup sequence for music: decode->play buffer, else fallback
+    async function ensureMusicPlaying() {
+        if (!CONFIG.audio.enabled) return;
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') {
+            try { await audioCtx.resume(); } catch(e) { console.warn('resume failed', e); }
+        }
+        // create gain node if missing
+        if (!musicGain) { musicGain = audioCtx.createGain(); musicGain.gain.value = clampVolume(CONFIG.audio.musicVolume); musicGain.connect(audioCtx.destination); }
+
+        const buf = await prepareMusicBuffer();
+        if (buf) {
+            const ok = startMusicFromBuffer();
+            if (ok) return true;
+        }
+        // fallback to element-based play
+        return startMusicElementFallback();
+    }
+
+    // SFX play: keep using HTMLAudio for SFX (works well and is already in your script)
     function playSample(src, volume = 1.0) {
         if (!CONFIG.audio.enabled || !audioStarted || !src) return;
         try {
@@ -356,7 +482,7 @@
             a.crossOrigin = "anonymous";
             a.volume = clampVolume(volume);
             a.preload = 'auto';
-            a.play().catch((e)=>{ /* may fail depending on gesture */ });
+            a.play().catch((e)=>{ /* may fail depending on gesture */ console.warn('sfx play failed', e); });
         } catch (e) { console.warn('playSample error', e); }
     }
 
@@ -364,6 +490,23 @@
     function playExplosionSound() { if (!CONFIG.audio.enabled || !audioStarted) return; const vol = CONFIG.audio.sfxVolume; playSample(CONFIG.audio.popSrc, vol); setTimeout(() => { playSample(CONFIG.audio.clusterSrc, vol * 0.9); }, 90); }
     function playBgExplosion() { if (!CONFIG.audio.enabled || !audioStarted) return; const bgVol = CONFIG.audio.sfxVolume * clampVolume(CONFIG.audio.bgSfxVolume); playSample(CONFIG.audio.popSrc, bgVol); }
     function playFormSound() { if (!CONFIG.audio.enabled || !audioStarted) return; const vol = CONFIG.audio.sfxVolume * 0.6; const src = CONFIG.audio.clusterSrc || CONFIG.audio.popSrc; playSample(src, vol); }
+
+    // Preload SFX with a light warm-up (still uses HTMLAudio)
+    async function initAudioPreload() {
+        if (!CONFIG.audio.enabled) return;
+        try {
+            const sfx = [CONFIG.audio.whistleSrc, CONFIG.audio.popSrc, CONFIG.audio.clusterSrc];
+            sfx.forEach(src => {
+                if (!src) return;
+                const pre = new Audio(src);
+                pre.volume = clampVolume(CONFIG.audio.sfxVolume);
+                pre.muted = true;
+                pre.preload = 'auto';
+                // quick play+pause to prime some webviews
+                pre.play().catch(()=>{}).then(()=>{ setTimeout(()=>{ try { pre.pause(); pre.currentTime = 0; pre.muted = false; } catch(e){} }, 150); });
+            });
+        } catch (e) { console.log('Audio preload failed:', e); }
+    }
 
     // ==================== ANIMATION LOOP (unchanged) ====================
     function checkAllFormedForCurrent() {
@@ -422,67 +565,57 @@
 
     animateStars(); animateBgFireworks(); animate();
 
-    // GESTURE HANDLER: start music reliably via AudioContext + gain so it actually begins on click
+    // GESTURE HANDLER: start music reliably via AudioContext + decode so it actually begins on click
     const overlay = document.getElementById('start-overlay');
+    const controls = document.getElementById('controls');
+    const btnMute = document.getElementById('btn-mute');
+    const btnUnmute = document.getElementById('btn-unmute');
+
+    btnMute.addEventListener('click', () => {
+        // mute musicGain or fallback element
+        if (musicGain) { musicGain.gain.value = 0; btnMute.style.display='none'; btnUnmute.style.display='inline-block'; }
+        if (fallbackMusicEl) { fallbackMusicEl.volume = 0; btnMute.style.display='none'; btnUnmute.style.display='inline-block'; }
+    });
+    btnUnmute.addEventListener('click', () => {
+        if (musicGain) { musicGain.gain.value = clampVolume(CONFIG.audio.musicVolume); btnUnmute.style.display='none'; btnMute.style.display='inline-block'; }
+        if (fallbackMusicEl) { fallbackMusicEl.volume = clampVolume(CONFIG.audio.musicVolume); btnUnmute.style.display='none'; btnMute.style.display='inline-block'; }
+    });
 
     async function onStartGesture(e) {
         // hide overlay immediately
         if (overlay) { overlay.style.display = 'none'; overlay.setAttribute('aria-hidden', 'true'); }
 
+        // show controls (so user can mute/unmute if needed)
+        controls.style.display = 'flex';
+
         // preload sfx (optional warm-up)
         await initAudioPreload();
 
-        // create/resume AudioContext and hook music element to it
+        // create/resume AudioContext and attempt to play music (decode path, fallback to element)
         try {
-            // create AudioContext if not existing
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            // resume context within gesture
-            if (audioCtx.state === 'suspended') {
-                await audioCtx.resume();
-            }
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
 
-            // create music audio element and connect to context
-            if (!musicAudio && CONFIG.audio && CONFIG.audio.musicSrc) {
-                musicAudio = createAudioElement(CONFIG.audio.musicSrc, true);
-                musicAudio.crossOrigin = 'anonymous';
-                musicAudio.loop = true;
-            }
-
-            if (musicAudio) {
-                // create gain node for volume control
+            // ensure gain exists
+            if (!musicGain) {
                 musicGain = audioCtx.createGain();
                 musicGain.gain.value = clampVolume(CONFIG.audio.musicVolume);
+                musicGain.connect(audioCtx.destination);
+            }
 
-                // create a MediaElementSource only once
-                try {
-                    const source = audioCtx.createMediaElementSource(musicAudio);
-                    source.connect(musicGain).connect(audioCtx.destination);
-                } catch (errSrc) {
-                    // some browsers disallow createMediaElementSource for cross-origin without headers,
-                    // fallback to connecting the element directly by letting it play (gain won't be controllable in that case)
-                    console.warn('createMediaElementSource failed (CORS?), falling back to direct play:', errSrc);
-                }
-
-                // attempt to play music within gesture (this should succeed)
-                try {
-                    musicAudio.currentTime = 0;
-                    await musicAudio.play();
-                    audioStarted = true;
-                    console.log('Background music started (audio element).');
-                } catch (errPlay) {
-                    console.warn('music.play() failed in gesture:', errPlay);
-                    // Still mark audioStarted if audioCtx resumed — so sfx will function
-                    if (audioCtx && audioCtx.state === 'running') audioStarted = true;
-                }
+            // attempt decode & buffer-play (best reliability in embedded browsers)
+            const buf = await prepareMusicBuffer();
+            if (buf) {
+                const ok = startMusicFromBuffer();
+                audioStarted = ok || (audioCtx && audioCtx.state === 'running');
             } else {
-                // no music configured; resume audio context so SFX can work
-                if (audioCtx && audioCtx.state === 'running') audioStarted = true;
+                // fallback to HTMLAudioElement
+                const ok = startMusicElementFallback();
+                audioStarted = ok || (audioCtx && audioCtx.state === 'running');
             }
         } catch (err) {
             console.warn('Audio start failed:', err);
-            // allow SFX (best-effort)
+            // allow SFX as best-effort
             audioStarted = true;
         }
 
@@ -506,6 +639,27 @@
     // fallback: ensure SFX preload on first interaction if not captured above
     document.body.addEventListener('touchstart', () => { initAudioPreload(); }, { once: true });
     document.body.addEventListener('click', () => { initAudioPreload(); }, { once: true });
+
+    // Helpful: if user navigates away or IG pauses audio, stop bufferSource so it can be recreated when necessary.
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            // pause fallback element (if any) to conserve resources
+            if (fallbackMusicEl && !fallbackMusicEl.paused) {
+                try { fallbackMusicEl.pause(); } catch(e) {}
+            }
+            // stop musicSource (one-shot). We'll recreate on next gesture if needed.
+            if (musicSource) {
+                try { musicSource.stop(); } catch(e) {}
+                musicSource = null;
+            }
+        } else {
+            // when returning to page, attempt resume if audio was running
+            if (audioStarted && audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume().catch(e=>console.warn('resume on visibilitychange failed', e));
+            }
+        }
+    });
+
 </script>
 </body>
 </html>
