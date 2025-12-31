@@ -1,0 +1,854 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>New Year 2026</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #000000 0%, #0a1628 50%, #000000 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1500px;
+        }
+
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        #fireworks-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #fireworks-canvas.active {
+            opacity: 1;
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .calendar-wrapper {
+            position: relative;
+            width: 280px;
+            height: 320px;
+            margin: 0 auto;
+            transform-style: preserve-3d;
+        }
+
+        .calendar-binding {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 30px;
+            background: linear-gradient(180deg, #8B4513 0%, #5D3A1A 50%, #8B4513 100%);
+            border-radius: 5px;
+            z-index: 50;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .calendar-binding::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            right: 15px;
+            height: 4px;
+            transform: translateY(-50%);
+            background: repeating-linear-gradient(
+                90deg,
+                #222 0px,
+                #222 6px,
+                transparent 6px,
+                transparent 18px
+            );
+        }
+
+        .calendar-rings {
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 180px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 60;
+        }
+
+        .ring {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #777;
+            border-radius: 50%;
+            background: transparent;
+        }
+
+        .calendar {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+        }
+
+        .calendar-page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 5px;
+            box-shadow: 
+                0 2px 10px rgba(0, 0, 0, 0.3),
+                2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-front {
+            background: linear-gradient(180deg, #ffffff 0%, #f8f8f8 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        .page-front::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(180deg, #cc0000 0%, #990000 100%);
+            border-radius: 5px 5px 0 0;
+        }
+
+        .page-back {
+            background: linear-gradient(180deg, #f0f0f0 0%, #e8e8e8 100%);
+            transform: rotateX(180deg);
+            border: 1px solid #d0d0d0;
+        }
+
+        .year-display {
+            font-size: 100px;
+            font-weight: 700;
+            color: #1a1a1a;
+            line-height: 1;
+            margin-top: 30px;
+            font-family: 'Georgia', serif;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .year-display.special {
+            animation: specialYear 0.8s ease-out forwards, specialGlow 1.5s ease-in-out infinite 0.8s;
+            color: #cc0000;
+        }
+
+        @keyframes specialYear {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes specialGlow {
+            0%, 100% {
+                text-shadow: 0 0 20px rgba(204, 0, 0, 0.5), 2px 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            50% {
+                text-shadow: 0 0 40px rgba(204, 0, 0, 0.8), 0 0 60px rgba(255, 215, 0, 0.4), 2px 2px 4px rgba(0, 0, 0, 0.1);
+            }
+        }
+
+        .flipping-page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-origin: top center;
+            transform-style: preserve-3d;
+            z-index: 50;
+        }
+
+        .flipping-page .page-front,
+        .flipping-page .page-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .flip-animation {
+            animation: flipPage 0.5s ease-in-out forwards;
+        }
+
+        @keyframes flipPage {
+            0% {
+                transform: rotateX(0deg);
+            }
+            100% {
+                transform: rotateX(-180deg);
+            }
+        }
+
+        .stacked-pages {
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            z-index: -1;
+        }
+
+        .stacked-page {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 100%;
+            background: #fff;
+            border-radius: 0 0 5px 5px;
+            border: 1px solid #ddd;
+        }
+
+        .stacked-page:nth-child(1) { width: 96%; bottom: -2px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .stacked-page:nth-child(2) { width: 92%; bottom: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .stacked-page:nth-child(3) { width: 88%; bottom: -6px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
+
+        .next-button {
+            display: none;
+            margin-top: 50px;
+            padding: 18px 36px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #000;
+            background: linear-gradient(135deg, #ffd700, #ffed4a, #ffd700);
+            background-size: 200% 200%;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 5px 25px rgba(255, 215, 0, 0.5),
+                0 0 50px rgba(255, 215, 0, 0.2);
+            letter-spacing: 0.5px;
+            font-family: 'Georgia', serif;
+        }
+
+        .next-button:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 
+                0 8px 35px rgba(255, 215, 0, 0.6),
+                0 0 70px rgba(255, 215, 0, 0.3);
+        }
+
+        .next-button:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .next-button.visible {
+            display: inline-block;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .light-burst {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.6) 0%, rgba(255, 215, 0, 0) 70%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 4;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .light-burst.active {
+            animation: lightBurst 1.2s ease-out forwards;
+        }
+
+        @keyframes lightBurst {
+            0% { width: 0; height: 0; opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { width: 150vmax; height: 150vmax; opacity: 0; }
+        }
+
+        @media (max-width: 360px) {
+            .calendar-wrapper {
+                width: 240px;
+                height: 280px;
+            }
+            .year-display {
+                font-size: 80px;
+            }
+            .next-button {
+                padding: 15px 30px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particle-canvas"></canvas>
+    <canvas id="fireworks-canvas"></canvas>
+    <div class="light-burst" id="light-burst"></div>
+
+    <div class="container">
+        <div class="calendar-wrapper" id="calendar-wrapper">
+            <div class="calendar-rings">
+                <div class="ring"></div>
+                <div class="ring"></div>
+                <div class="ring"></div>
+                <div class="ring"></div>
+                <div class="ring"></div>
+            </div>
+            <div class="calendar-binding"></div>
+            <div class="calendar" id="calendar">
+                <div class="calendar-page page-front" id="current-page">
+                    <div class="year-display" id="year-display">2000</div>
+                </div>
+                <div class="stacked-pages">
+                    <div class="stacked-page"></div>
+                    <div class="stacked-page"></div>
+                    <div class="stacked-page"></div>
+                </div>
+            </div>
+        </div>
+
+        <button class="next-button" id="next-button">
+            🎆 Watch the fireworks — a message for you!
+        </button>
+    </div>
+
+    <script>
+        // Particle Background
+        const particleCanvas = document.getElementById('particle-canvas');
+        const pCtx = particleCanvas.getContext('2d');
+        let particles = [];
+
+        function resizeParticleCanvas() {
+            particleCanvas.width = window.innerWidth;
+            particleCanvas.height = window.innerHeight;
+        }
+
+        resizeParticleCanvas();
+        window.addEventListener('resize', resizeParticleCanvas);
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * particleCanvas.width;
+                this.y = Math.random() * particleCanvas.height;
+                this.size = Math.random() * 1.5 + 0.5;
+                this.speedY = Math.random() * 0.2 + 0.05;
+                this.opacity = Math.random() * 0.4 + 0.1;
+                this.twinkleSpeed = Math.random() * 0.02 + 0.01;
+                this.twinkleDir = 1;
+                this.hue = Math.random() > 0.5 ? Math.random() * 40 + 200 : Math.random() * 40 + 35;
+            }
+
+            update() {
+                this.y -= this.speedY;
+                this.opacity += this.twinkleSpeed * this.twinkleDir;
+                
+                if (this.opacity > 0.5 || this.opacity < 0.1) {
+                    this.twinkleDir *= -1;
+                }
+
+                if (this.y < 0) {
+                    this.y = particleCanvas.height;
+                    this.x = Math.random() * particleCanvas.width;
+                }
+            }
+
+            draw() {
+                pCtx.beginPath();
+                pCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                pCtx.fillStyle = `hsla(${this.hue}, 70%, 70%, ${this.opacity})`;
+                pCtx.fill();
+            }
+        }
+
+        for (let i = 0; i < 80; i++) {
+            particles.push(new Particle());
+        }
+
+        function animateParticles() {
+            pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        animateParticles();
+
+        // Realistic Fireworks
+        const fireworksCanvas = document.getElementById('fireworks-canvas');
+        const fCtx = fireworksCanvas.getContext('2d');
+        let fireworksActive = false;
+        let rockets = [];
+        let sparks = [];
+
+        function resizeFireworksCanvas() {
+            fireworksCanvas.width = window.innerWidth;
+            fireworksCanvas.height = window.innerHeight;
+        }
+
+        resizeFireworksCanvas();
+        window.addEventListener('resize', resizeFireworksCanvas);
+
+        class Rocket {
+            constructor() {
+                this.x = Math.random() * fireworksCanvas.width * 0.6 + fireworksCanvas.width * 0.2;
+                this.y = fireworksCanvas.height;
+                this.targetY = Math.random() * fireworksCanvas.height * 0.3 + fireworksCanvas.height * 0.1;
+                this.speed = Math.random() * 3 + 8;
+                this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.2;
+                this.vx = Math.cos(this.angle) * this.speed;
+                this.vy = Math.sin(this.angle) * this.speed;
+                this.trail = [];
+                this.exploded = false;
+                this.hue = Math.random() * 360;
+                this.size = 3;
+            }
+
+            update() {
+                if (this.exploded) return;
+
+                this.trail.push({ x: this.x, y: this.y, alpha: 1 });
+                if (this.trail.length > 15) this.trail.shift();
+
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.15;
+
+                // Update trail alpha
+                this.trail.forEach((t, i) => {
+                    t.alpha = (i / this.trail.length) * 0.8;
+                });
+
+                if (this.vy >= 0 || this.y <= this.targetY) {
+                    this.explode();
+                }
+            }
+
+            explode() {
+                this.exploded = true;
+                
+                const sparkCount = 150 + Math.random() * 100;
+                const type = Math.floor(Math.random() * 4);
+
+                for (let i = 0; i < sparkCount; i++) {
+                    let spark;
+                    
+                    if (type === 0) {
+                        // Spherical burst
+                        const angle = Math.random() * Math.PI * 2;
+                        const phi = Math.acos(2 * Math.random() - 1);
+                        const speed = Math.random() * 6 + 3;
+                        spark = new Spark(
+                            this.x, this.y,
+                            Math.sin(phi) * Math.cos(angle) * speed,
+                            Math.sin(phi) * Math.sin(angle) * speed - 2,
+                            this.hue
+                        );
+                    } else if (type === 1) {
+                        // Willow
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = Math.random() * 4 + 2;
+                        spark = new Spark(
+                            this.x, this.y,
+                            Math.cos(angle) * speed,
+                            Math.sin(angle) * speed,
+                            this.hue,
+                            0.015,
+                            true
+                        );
+                    } else if (type === 2) {
+                        // Chrysanthemum
+                        const angle = (i / sparkCount) * Math.PI * 2;
+                        const speed = Math.random() * 2 + 5;
+                        spark = new Spark(
+                            this.x, this.y,
+                            Math.cos(angle) * speed,
+                            Math.sin(angle) * speed - 1,
+                            this.hue + (Math.random() - 0.5) * 30
+                        );
+                    } else {
+                        // Multi-color burst
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = Math.random() * 5 + 3;
+                        spark = new Spark(
+                            this.x, this.y,
+                            Math.cos(angle) * speed,
+                            Math.sin(angle) * speed - 1,
+                            Math.random() * 360
+                        );
+                    }
+                    
+                    sparks.push(spark);
+                }
+
+                // Add crackle sparks
+                for (let i = 0; i < 20; i++) {
+                    setTimeout(() => {
+                        if (!fireworksActive) return;
+                        const angle = Math.random() * Math.PI * 2;
+                        const dist = Math.random() * 50;
+                        const sx = this.x + Math.cos(angle) * dist;
+                        const sy = this.y + Math.sin(angle) * dist;
+                        sparks.push(new Spark(sx, sy, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2, 60, 0.05));
+                    }, Math.random() * 500);
+                }
+            }
+
+            draw() {
+                if (this.exploded) return;
+
+                // Draw trail
+                this.trail.forEach((t, i) => {
+                    const size = (i / this.trail.length) * this.size;
+                    fCtx.beginPath();
+                    fCtx.arc(t.x, t.y, size, 0, Math.PI * 2);
+                    fCtx.fillStyle = `rgba(255, 200, 100, ${t.alpha})`;
+                    fCtx.fill();
+                });
+
+                // Draw rocket head
+                fCtx.beginPath();
+                fCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                fCtx.fillStyle = '#fff';
+                fCtx.shadowBlur = 15;
+                fCtx.shadowColor = '#ff9500';
+                fCtx.fill();
+                fCtx.shadowBlur = 0;
+            }
+        }
+
+        class Spark {
+            constructor(x, y, vx, vy, hue, decay = 0.02, isWillow = false) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.hue = hue;
+                this.alpha = 1;
+                this.decay = decay + Math.random() * 0.01;
+                this.size = Math.random() * 2 + 1;
+                this.isWillow = isWillow;
+                this.trail = [];
+                this.gravity = isWillow ? 0.08 : 0.05;
+                this.friction = isWillow ? 0.98 : 0.985;
+            }
+
+            update() {
+                this.trail.push({ x: this.x, y: this.y, alpha: this.alpha });
+                if (this.trail.length > (this.isWillow ? 20 : 8)) this.trail.shift();
+
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += this.gravity;
+                this.vx *= this.friction;
+                this.vy *= this.friction;
+                this.alpha -= this.decay;
+            }
+
+            draw() {
+                // Draw trail
+                if (this.trail.length > 1) {
+                    fCtx.beginPath();
+                    fCtx.moveTo(this.trail[0].x, this.trail[0].y);
+                    for (let i = 1; i < this.trail.length; i++) {
+                        fCtx.lineTo(this.trail[i].x, this.trail[i].y);
+                    }
+                    fCtx.strokeStyle = `hsla(${this.hue}, 100%, 70%, ${this.alpha * 0.3})`;
+                    fCtx.lineWidth = this.size * 0.5;
+                    fCtx.stroke();
+                }
+
+                // Draw spark
+                const lightness = 50 + this.alpha * 30;
+                fCtx.beginPath();
+                fCtx.arc(this.x, this.y, this.size * this.alpha, 0, Math.PI * 2);
+                fCtx.fillStyle = `hsla(${this.hue}, 100%, ${lightness}%, ${this.alpha})`;
+                fCtx.fill();
+
+                // Glow effect
+                if (this.alpha > 0.5) {
+                    fCtx.beginPath();
+                    fCtx.arc(this.x, this.y, this.size * 2 * this.alpha, 0, Math.PI * 2);
+                    fCtx.fillStyle = `hsla(${this.hue}, 100%, 70%, ${this.alpha * 0.2})`;
+                    fCtx.fill();
+                }
+            }
+        }
+
+        function animateFireworks() {
+            if (!fireworksActive) return;
+
+            fCtx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            fCtx.fillRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+
+            // Launch new rockets
+            if (Math.random() < 0.15) {
+                rockets.push(new Rocket());
+            }
+
+            // Update and draw rockets
+            rockets = rockets.filter(r => !r.exploded);
+            rockets.forEach(r => {
+                r.update();
+                r.draw();
+            });
+
+            // Update and draw sparks
+            sparks = sparks.filter(s => s.alpha > 0);
+            sparks.forEach(s => {
+                s.update();
+                s.draw();
+            });
+
+            requestAnimationFrame(animateFireworks);
+        }
+
+        // Sound Effects
+        let audioStarted = false;
+        let synth, celebrationSynth, noiseSynth;
+
+        async function initAudio() {
+            if (audioStarted) return;
+            try {
+                await Tone.start();
+                audioStarted = true;
+
+                synth = new Tone.Synth({
+                    oscillator: { type: 'triangle' },
+                    envelope: { attack: 0.005, decay: 0.1, sustain: 0.05, release: 0.15 }
+                }).toDestination();
+                synth.volume.value = -18;
+
+                celebrationSynth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: 'sine' },
+                    envelope: { attack: 0.02, decay: 0.2, sustain: 0.1, release: 0.4 }
+                }).toDestination();
+                celebrationSynth.volume.value = -12;
+
+                noiseSynth = new Tone.NoiseSynth({
+                    noise: { type: 'white' },
+                    envelope: { attack: 0.005, decay: 0.08, sustain: 0 }
+                }).toDestination();
+                noiseSynth.volume.value = -25;
+
+            } catch (e) {
+                console.log('Audio init failed:', e);
+            }
+        }
+
+        function playPageFlip() {
+            if (synth && audioStarted) {
+                try {
+                    const notes = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'];
+                    const idx = Math.min(Math.floor((currentYearIndex / years.length) * notes.length), notes.length - 1);
+                    synth.triggerAttackRelease(notes[idx], '32n');
+                    if (noiseSynth) noiseSynth.triggerAttackRelease('32n');
+                } catch (e) {}
+            }
+        }
+
+        function playSpecialYear() {
+            if (celebrationSynth && audioStarted) {
+                try {
+                    const now = Tone.now();
+                    celebrationSynth.triggerAttackRelease(['C4', 'E4', 'G4', 'C5'], '4n', now);
+                    celebrationSynth.triggerAttackRelease(['E4', 'G4', 'B4', 'E5'], '4n', now + 0.3);
+                    celebrationSynth.triggerAttackRelease(['G4', 'B4', 'D5', 'G5'], '2n', now + 0.6);
+                } catch (e) {}
+            }
+        }
+
+        let fireworkSoundInterval;
+
+        function playFireworkSound() {
+            if (celebrationSynth && audioStarted) {
+                try {
+                    const chords = [
+                        ['C5', 'E5', 'G5'],
+                        ['D5', 'F#5', 'A5'],
+                        ['E5', 'G#5', 'B5'],
+                        ['F5', 'A5', 'C6'],
+                        ['G5', 'B5', 'D6']
+                    ];
+                    const chord = chords[Math.floor(Math.random() * chords.length)];
+                    celebrationSynth.triggerAttackRelease(chord, '16n');
+                    
+                    if (noiseSynth && Math.random() > 0.6) {
+                        noiseSynth.triggerAttackRelease('16n');
+                    }
+                } catch (e) {}
+            }
+        }
+
+        function startFireworkSounds() {
+            playFireworkSound();
+            fireworkSoundInterval = setInterval(playFireworkSound, 200);
+        }
+
+        function stopFireworkSounds() {
+            clearInterval(fireworkSoundInterval);
+        }
+
+        // Calendar Animation
+        const calendar = document.getElementById('calendar');
+        const yearDisplay = document.getElementById('year-display');
+        const nextButton = document.getElementById('next-button');
+        const lightBurst = document.getElementById('light-burst');
+
+        const years = [];
+        for (let y = 2000; y <= 2026; y++) {
+            years.push(y);
+        }
+
+        let currentYearIndex = 0;
+
+        function createFlippingPage(year) {
+            const flippingPage = document.createElement('div');
+            flippingPage.className = 'flipping-page';
+            
+            const front = document.createElement('div');
+            front.className = 'calendar-page page-front';
+            front.innerHTML = `<div class="year-display">${year}</div>`;
+            
+            const back = document.createElement('div');
+            back.className = 'calendar-page page-back';
+            
+            flippingPage.appendChild(front);
+            flippingPage.appendChild(back);
+            
+            return flippingPage;
+        }
+
+        async function flipToNextYear() {
+            if (currentYearIndex >= years.length - 1) return;
+            
+            const currentYear = years[currentYearIndex];
+            const nextYear = years[currentYearIndex + 1];
+            
+            const flippingPage = createFlippingPage(currentYear);
+            calendar.insertBefore(flippingPage, calendar.firstChild);
+            
+            playPageFlip();
+            
+            await new Promise(resolve => setTimeout(resolve, 30));
+            flippingPage.classList.add('flip-animation');
+            
+            setTimeout(() => {
+                yearDisplay.textContent = nextYear;
+            }, 250);
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            flippingPage.remove();
+            
+            currentYearIndex++;
+            
+            if (currentYearIndex === years.length - 1) {
+                triggerSpecialEffect();
+            }
+        }
+
+        function triggerSpecialEffect() {
+            yearDisplay.classList.add('special');
+            lightBurst.classList.add('active');
+            playSpecialYear();
+            
+            setTimeout(() => {
+                nextButton.classList.add('visible');
+            }, 1200);
+        }
+
+        async function animateYears() {
+            await initAudio();
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            for (let i = 0; i < years.length - 1; i++) {
+                await flipToNextYear();
+                const delay = 200 + (i / (years.length - 1)) * 150;
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+
+        nextButton.addEventListener('click', async () => {
+            await initAudio();
+            
+            nextButton.style.pointerEvents = 'none';
+            nextButton.style.opacity = '0.5';
+            
+            // Start fireworks
+            fireworksCanvas.classList.add('active');
+            fireworksActive = true;
+            animateFireworks();
+            startFireworkSounds();
+            
+            // After 3 seconds, redirect
+            setTimeout(() => {
+                stopFireworkSounds();
+                fireworksActive = false;
+                window.location.href = 'fireworksmessage.html';
+            }, 3000);
+        });
+
+        // Auto-start
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(animateYears, 500);
+        });
+
+        // Mobile audio init
+        document.body.addEventListener('touchstart', initAudio, { once: true });
+        document.body.addEventListener('click', initAudio, { once: true });
+    </script>
+</body>
+</html>
