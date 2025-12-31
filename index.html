@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -90,51 +89,22 @@
             "Again, Happy New Year",
             "Always wishing you the best - Jay"
         ],
-        advance: {
-            type: 'fixed',
-            leadTime: 1000,
-            factor: 0.5,
-            min: 0,
-            max: 5000
-        },
+        advance: { type: 'fixed', leadTime: 1000, factor: 0.5, min: 0, max: 5000 },
         textDisplay: { min: 2000, max: 5000 },
         stars: { count: 100, minSize: 0.3, maxSize: 1.5, twinkleSpeed: { min: 0.005, max: 0.02 }, coloredStarChance: 0.15 },
-        bgFireworks: {
-            spawnChance: 0.01,
-            rocketSpeed: { min: 1, max: 2 },
-            particleCount: 35,
-            particleSpeed: { min: 0.5, max: 2.5 },
-            particleSize: { min: 1, max: 2.5 },
-            particleDecay: { min: 0.008, max: 0.015 },
-            trailLength: 15
-        },
-        mainFireworks: {
-            rocketSpeed: 3,
-            rocketTrailLength: 20,
-            particleSize: 1.8,
-            particleSpacing: 3,
-            explosionSpeed: { min: 5, max: 10 },
-            explosionDuration: { min: 55, max: 75 },
-            formingSpeed: 0.08,
-            holdDuration: 10000,
-            fadeSpeed: 0.012,
-            fallSpeed: 0.3,
-            fallAcceleration: 0.02,
-            fallDrift: 0.4,
-            maxRockets: 3,
-            particlesPerRocket: 300
-        },
+        bgFireworks: { spawnChance: 0.01, rocketSpeed: { min: 1, max: 2 }, particleCount: 35, particleSpeed: { min: 0.5, max: 2.5 }, particleSize: { min: 1, max: 2.5 }, particleDecay: { min: 0.008, max: 0.015 }, trailLength: 15 },
+        mainFireworks: { rocketSpeed: 3, rocketTrailLength: 20, particleSize: 1.8, particleSpacing: 3, explosionSpeed: { min: 5, max: 10 }, explosionDuration: { min: 55, max: 75 }, formingSpeed: 0.08, holdDuration: 10000, fadeSpeed: 0.012, fallSpeed: 0.3, fallAcceleration: 0.02, fallDrift: 0.4, maxRockets: 3, particlesPerRocket: 300 },
         text: { maxFontSize: 38, fontSizeRatio: 12, maxWidthRatio: 0.9, lineHeightRatio: 1.4 },
         colors: { hueSpeed: { min: 2, max: 4 }, saturation: 100, lightness: 80, particleAlpha: 1 },
         delays: { startDelay: 1000, rocketLaunchInterval: 80, nextMessageDelay: 200, triggerNextAfterHoldFrames: 60, formSoundDelay: 0 },
         audio: {
             enabled: true,
-            // update these with your raw GitHub URLs if you host there
+            // IMPORTANT: point these to valid URLs (raw GitHub URLs or local files)
             musicSrc: 'music.mp3',
             whistleSrc: 'whistle.mp3',
             popSrc: 'pop.mp3',
             clusterSrc: 'cluster.mp3',
-            musicVolume: 0.3,
+            musicVolume: 0.3,   // uses gain node (0.0..1.0)
             sfxVolume: 1.0,
             bgSfxVolume: 0.5
         }
@@ -171,7 +141,7 @@
         bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
     }
 
-    // ==================== STARS ====================
+    // ==================== STARS (unchanged) ====================
     class Star { constructor() { this.reset(); } reset() {
         const cfg = CONFIG.stars;
         this.x = Math.random() * starsCanvas.width; this.y = Math.random() * starsCanvas.height;
@@ -189,7 +159,7 @@
     const stars = []; for (let i = 0; i < CONFIG.stars.count; i++) stars.push(new Star());
     function animateStars() { starsCtx.clearRect(0, 0, starsCanvas.width, starsCanvas.height); stars.forEach(s => { s.update(); s.draw(); }); requestAnimationFrame(animateStars); }
 
-    // ==================== BACKGROUND FIREWORKS ====================
+    // ==================== BACKGROUND FIREWORKS (unchanged) ====================
     class BgRocket { constructor() {
             const cfg = CONFIG.bgFireworks; this.x = Math.random() * bgFireworksCanvas.width; this.y = bgFireworksCanvas.height + 5;
             this.targetY = Math.random() * bgFireworksCanvas.height * 0.4 + bgFireworksCanvas.height * 0.1;
@@ -228,7 +198,7 @@
         requestAnimationFrame(animateBgFireworks);
     }
 
-    // ==================== MAIN TEXT FIREWORKS ====================
+    // ==================== MAIN TEXT FIREWORKS (unchanged) ====================
     let globalMessageIdCounter = 0;
     const activeMessageIdMap = {};
     const prelaunchedIndices = new Set();
@@ -267,7 +237,7 @@
     let isShowingMessage = false, canLaunchNext = true;
     let formSoundPlayed = false;
 
-    // ==================== TEXT HELPERS ====================
+    // ==================== TEXT HELPERS (unchanged) ====================
     function wrapText(ctx, text, maxWidth) {
         const words = text.split(' ');
         const lines = []; let currentLine = '';
@@ -307,7 +277,7 @@
     function clearHoldTimer() { if (holdTimeout) { clearTimeout(holdTimeout); holdTimeout = null; scheduledMessageIndex = null; } }
     function triggerCurrentMessageFade() { clearHoldTimer(); const activeId = activeMessageIdMap[currentMessageIndex]; particles.forEach(p => { if (p.messageId === activeId && !p.isFinal) { p.triggerFade(); } }); }
 
-    // Launch fireworks
+    // Launch fireworks (unchanged)
     function launchFireworksForIndex(index, isFinal) {
         const cfg = CONFIG.mainFireworks; const delayCfg = CONFIG.delays;
         const centerX = fireworksCanvas.width / 2; const centerY = fireworksCanvas.height / 2;
@@ -352,10 +322,11 @@
         }
     }
 
-    // ==================== AUDIO (sample-based SFX + music) ====================
+    // ==================== AUDIO (fixed start using AudioContext + gain) ====================
     let audioStarted = false;
     let musicAudio = null;
-
+    let audioCtx = null;
+    let musicGain = null;
     function createAudioElement(src, loop = false) {
         try {
             const a = new Audio(src);
@@ -363,23 +334,17 @@
         } catch (e) { console.warn('Audio creation failed for', src, e); return null; }
     }
 
-    // initAudio preloads SFX (does NOT set audioStarted)
-    async function initAudio() {
+    // initAudio preloads SFX (optional)
+    async function initAudioPreload() {
         if (!CONFIG.audio.enabled) return;
         try {
-            if (CONFIG.audio.whistleSrc) {
-                const pre = createAudioElement(CONFIG.audio.whistleSrc);
+            const sfx = [CONFIG.audio.whistleSrc, CONFIG.audio.popSrc, CONFIG.audio.clusterSrc];
+            sfx.forEach(src => {
+                if (!src) return;
+                const pre = createAudioElement(src);
                 if (pre) { pre.volume = clampVolume(CONFIG.audio.sfxVolume); pre.muted = true; pre.play().catch(()=>{}); setTimeout(()=>{ pre.pause(); pre.currentTime = 0; pre.muted = false; }, 200); }
-            }
-            if (CONFIG.audio.popSrc) {
-                const pre = createAudioElement(CONFIG.audio.popSrc);
-                if (pre) { pre.volume = clampVolume(CONFIG.audio.sfxVolume); pre.muted = true; pre.play().catch(()=>{}); setTimeout(()=>{ pre.pause(); pre.currentTime = 0; pre.muted = false; }, 200); }
-            }
-            if (CONFIG.audio.clusterSrc) {
-                const pre = createAudioElement(CONFIG.audio.clusterSrc);
-                if (pre) { pre.volume = clampVolume(CONFIG.audio.sfxVolume); pre.muted = true; pre.play().catch(()=>{}); setTimeout(()=>{ pre.pause(); pre.currentTime = 0; pre.muted = false; }, 200); }
-            }
-        } catch (e) { console.log('Audio init failed:', e); }
+            });
+        } catch (e) { console.log('Audio preload failed:', e); }
     }
 
     function clampVolume(v) { if (typeof v !== 'number') return 1.0; return Math.max(0, Math.min(1, v)); }
@@ -400,7 +365,7 @@
     function playBgExplosion() { if (!CONFIG.audio.enabled || !audioStarted) return; const bgVol = CONFIG.audio.sfxVolume * clampVolume(CONFIG.audio.bgSfxVolume); playSample(CONFIG.audio.popSrc, bgVol); }
     function playFormSound() { if (!CONFIG.audio.enabled || !audioStarted) return; const vol = CONFIG.audio.sfxVolume * 0.6; const src = CONFIG.audio.clusterSrc || CONFIG.audio.popSrc; playSample(src, vol); }
 
-    // ==================== ANIMATION LOOP ====================
+    // ==================== ANIMATION LOOP (unchanged) ====================
     function checkAllFormedForCurrent() {
         const activeId = activeMessageIdMap[currentMessageIndex];
         if (!activeId) return false;
@@ -412,8 +377,11 @@
     function computeLead(displayMs) {
         const adv = CONFIG.advance || {};
         if (adv.type === 'relative') {
-            let factor = (typeof adv.factor === 'number') ? adv.factor : 0.5; factor = Math.max(0, Math.min(1, factor));
-            let lead = Math.round(displayMs * factor); if (typeof adv.min === 'number') lead = Math.max(lead, adv.min); if (typeof adv.max === 'number') lead = Math.min(lead, adv.max);
+            let factor = (typeof adv.factor === 'number') ? adv.factor : 0.5;
+            factor = Math.max(0, Math.min(1, factor));
+            let lead = Math.round(displayMs * factor);
+            if (typeof adv.min === 'number') lead = Math.max(lead, adv.min);
+            if (typeof adv.max === 'number') lead = Math.min(lead, adv.max);
             return Math.max(0, lead);
         } else { return Math.max(0, adv.leadTime || 0); }
     }
@@ -449,49 +417,72 @@
 
     // ==================== START (only after user tap) ====================
     async function start() {
-        // All audio preloads already done in gesture handler. start() schedules first fireworks.
         setTimeout(() => { launchFireworksForIndex(0, CONFIG.messages.length === 1); }, CONFIG.delays.startDelay);
     }
 
     animateStars(); animateBgFireworks(); animate();
 
-    // GESTURE HANDLER: create & play music in the gesture to avoid browser blocking
+    // GESTURE HANDLER: start music reliably via AudioContext + gain so it actually begins on click
     const overlay = document.getElementById('start-overlay');
 
     async function onStartGesture(e) {
-        // hide overlay
+        // hide overlay immediately
         if (overlay) { overlay.style.display = 'none'; overlay.setAttribute('aria-hidden', 'true'); }
 
-        // preload sfx (this won't play music)
-        await initAudio();
+        // preload sfx (optional warm-up)
+        await initAudioPreload();
 
-        // create music element and play immediately inside gesture
-        if (CONFIG.audio && CONFIG.audio.musicSrc) {
-            try {
-                musicAudio = createAudioElement(CONFIG.audio.musicSrc, true);
-                if (!musicAudio) musicAudio = new Audio(CONFIG.audio.musicSrc);
-                musicAudio.loop = true;
-                musicAudio.volume = clampVolume(CONFIG.audio.musicVolume);
-                musicAudio.muted = false;
-
-                // Attempt to play music right away (must be within user gesture to succeed)
-                await musicAudio.play();
-                audioStarted = true;
-                console.log('Background music started');
-            } catch (err) {
-                // If play() failed, log and still mark audioStarted so SFX can be played if possible.
-                console.warn('Background music play failed on gesture:', err);
-                // try one more unmuted attempt (some browsers require currentTime=0 / small timeout)
-                try {
-                    if (musicAudio) { musicAudio.currentTime = 0; await musicAudio.play(); audioStarted = true; console.log('Background music started on second attempt'); }
-                } catch (err2) {
-                    console.warn('Second attempt to play music also failed:', err2);
-                    // keep audioStarted = true so SFX triggered by user gesture may still play
-                    audioStarted = true;
-                }
+        // create/resume AudioContext and hook music element to it
+        try {
+            // create AudioContext if not existing
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
-        } else {
-            // no music configured but still allow SFX
+            // resume context within gesture
+            if (audioCtx.state === 'suspended') {
+                await audioCtx.resume();
+            }
+
+            // create music audio element and connect to context
+            if (!musicAudio && CONFIG.audio && CONFIG.audio.musicSrc) {
+                musicAudio = createAudioElement(CONFIG.audio.musicSrc, true);
+                musicAudio.crossOrigin = 'anonymous';
+                musicAudio.loop = true;
+            }
+
+            if (musicAudio) {
+                // create gain node for volume control
+                musicGain = audioCtx.createGain();
+                musicGain.gain.value = clampVolume(CONFIG.audio.musicVolume);
+
+                // create a MediaElementSource only once
+                try {
+                    const source = audioCtx.createMediaElementSource(musicAudio);
+                    source.connect(musicGain).connect(audioCtx.destination);
+                } catch (errSrc) {
+                    // some browsers disallow createMediaElementSource for cross-origin without headers,
+                    // fallback to connecting the element directly by letting it play (gain won't be controllable in that case)
+                    console.warn('createMediaElementSource failed (CORS?), falling back to direct play:', errSrc);
+                }
+
+                // attempt to play music within gesture (this should succeed)
+                try {
+                    musicAudio.currentTime = 0;
+                    await musicAudio.play();
+                    audioStarted = true;
+                    console.log('Background music started (audio element).');
+                } catch (errPlay) {
+                    console.warn('music.play() failed in gesture:', errPlay);
+                    // Still mark audioStarted if audioCtx resumed — so sfx will function
+                    if (audioCtx && audioCtx.state === 'running') audioStarted = true;
+                }
+            } else {
+                // no music configured; resume audio context so SFX can work
+                if (audioCtx && audioCtx.state === 'running') audioStarted = true;
+            }
+        } catch (err) {
+            console.warn('Audio start failed:', err);
+            // allow SFX (best-effort)
             audioStarted = true;
         }
 
@@ -513,8 +504,8 @@
     overlay.addEventListener('click', onStartGesture, { once: true });
 
     // fallback: ensure SFX preload on first interaction if not captured above
-    document.body.addEventListener('touchstart', () => { initAudio(); }, { once: true });
-    document.body.addEventListener('click', () => { initAudio(); }, { once: true });
+    document.body.addEventListener('touchstart', () => { initAudioPreload(); }, { once: true });
+    document.body.addEventListener('click', () => { initAudioPreload(); }, { once: true });
 </script>
 </body>
 </html>
