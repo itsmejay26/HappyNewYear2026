@@ -55,6 +55,16 @@
             height: 100%;
             z-index: 10;
         }
+
+        #progress {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
@@ -62,11 +72,12 @@
     <canvas id="stars-canvas"></canvas>
     <canvas id="bg-fireworks-canvas"></canvas>
     <canvas id="fireworks-canvas"></canvas>
+    <div id="progress"></div>
 
     <script>
         // ==================== CONFIGURATION ====================
         const CONFIG = {
-            // Messages to display
+            // Messages to display - ALL 37 MESSAGES
             messages: [
                 "Hi Shana",
                 "Happy New Year!",
@@ -129,28 +140,29 @@
 
             // Main text fireworks configuration
             mainFireworks: {
-                rocketSpeed: 3,
+                rocketSpeed: 4,
                 rocketTrailLength: 20,
-                particleSize: 1.8,
-                particleSpacing: 3,
+                particleSize: 2,
+                particleSpacing: 4,
                 explosionSpeed: { min: 5, max: 10 },
-                explosionDuration: { min: 55, max: 75 },
-                formingSpeed: 0.08,
-                holdDuration: 100,
-                fadeSpeed: 0.012,
+                explosionDuration: { min: 45, max: 65 },
+                formingSpeed: 0.1,
+                holdDuration: 80,
+                fadeSpeed: 0.015,
                 fallSpeed: 0.3,
-                fallAcceleration: 0.02,
+                fallAcceleration: 0.025,
                 fallDrift: 0.4,
-                maxRockets: 3,
-                particlesPerRocket: 300
+                maxRockets: 2,
+                particlesPerRocket: 250
             },
 
             // Text configuration
             text: {
-                maxFontSize: 38,
-                fontSizeRatio: 12,
-                maxWidthRatio: 0.9,
-                lineHeightRatio: 1.4
+                maxFontSize: 32,
+                minFontSize: 18,
+                fontSizeRatio: 14,
+                maxWidthRatio: 0.92,
+                lineHeightRatio: 1.35
             },
 
             // Color configuration
@@ -161,12 +173,12 @@
                 particleAlpha: 1
             },
 
-            // Delay & Timing configuration (in milliseconds)
+            // Delay & Timing configuration
             delays: {
                 startDelay: 1000,
-                rocketLaunchInterval: 80,
-                nextMessageDelay: 200,
-                triggerNextAfterHoldFrames: 60,
+                rocketLaunchInterval: 60,
+                nextMessageDelay: 150,
+                triggerNextAfterHoldFrames: 50,
                 formSoundDelay: 0
             },
 
@@ -179,7 +191,10 @@
                 bgNoiseVolume: -38,
                 padVolume: -26,
                 chordInterval: 6000
-            }
+            },
+
+            // Show progress indicator
+            showProgress: true
         };
 
         // ==================== CANVAS SETUP ====================
@@ -191,6 +206,7 @@
         const bfCtx = bgFireworksCanvas.getContext('2d');
         const fireworksCanvas = document.getElementById('fireworks-canvas');
         const fCtx = fireworksCanvas.getContext('2d');
+        const progressEl = document.getElementById('progress');
 
         function resizeCanvases() {
             const w = window.innerWidth;
@@ -222,6 +238,12 @@
         }
 
         drawBackground();
+
+        function updateProgress(current, total) {
+            if (CONFIG.showProgress) {
+                progressEl.textContent = `${current + 1} / ${total}`;
+            }
+        }
 
         // ==================== STARS ====================
         class Star {
@@ -403,7 +425,7 @@
             }
 
             triggerFade() {
-                if (this.phase === 'hold') {
+                if (this.phase === 'hold' || this.phase === 'form') {
                     this.phase = 'fade';
                     this.fallSpeedY = 0;
                 }
@@ -431,7 +453,7 @@
                     this.x += dx * cfg.formingSpeed;
                     this.y += dy * cfg.formingSpeed;
                     
-                    if (Math.abs(dx) < 0.8 && Math.abs(dy) < 0.8) {
+                    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
                         this.x = this.targetX;
                         this.y = this.targetY;
                         this.phase = 'hold';
@@ -451,7 +473,6 @@
                     this.y += cfg.fallSpeed + this.fallSpeedY;
                     this.x += this.fallSpeedX + (Math.random() - 0.5) * cfg.fallDrift;
                     this.alpha -= cfg.fadeSpeed;
-                    
                     this.size = cfg.particleSize * (0.5 + Math.random() * 0.5);
                 }
             }
@@ -472,7 +493,7 @@
             constructor(targetX, targetY) {
                 const cfg = CONFIG.mainFireworks;
                 
-                this.x = fireworksCanvas.width / 2 + (Math.random() - 0.5) * 120;
+                this.x = fireworksCanvas.width / 2 + (Math.random() - 0.5) * 100;
                 this.y = fireworksCanvas.height + 10;
                 this.targetX = targetX;
                 this.targetY = targetY;
@@ -526,6 +547,7 @@
         let canLaunchNext = true;
         let holdFrameCount = 0;
         let formSoundPlayed = false;
+        let isLaunching = false;
 
         // ==================== TEXT HELPERS ====================
         function wrapText(ctx, text, maxWidth) {
@@ -557,7 +579,15 @@
             const tempCtx = tempCanvas.getContext('2d');
             
             const maxWidth = fireworksCanvas.width * cfg.maxWidthRatio;
+            
+            // Calculate dynamic font size based on text length
             let fontSize = Math.min(cfg.maxFontSize, fireworksCanvas.width / cfg.fontSizeRatio);
+            if (text.length > 50) {
+                fontSize = Math.max(cfg.minFontSize, fontSize * 0.8);
+            }
+            if (text.length > 80) {
+                fontSize = Math.max(cfg.minFontSize, fontSize * 0.85);
+            }
             
             tempCtx.font = `bold ${fontSize}px Arial`;
             const lines = wrapText(tempCtx, text, maxWidth);
@@ -571,8 +601,8 @@
                 if (w > maxLineWidth) maxLineWidth = w;
             });
             
-            tempCanvas.width = Math.max(maxLineWidth + 30, 100);
-            tempCanvas.height = Math.max(totalHeight + 30, 50);
+            tempCanvas.width = Math.max(maxLineWidth + 40, 100);
+            tempCanvas.height = Math.max(totalHeight + 40, 60);
             
             tempCtx.font = `bold ${fontSize}px Arial`;
             tempCtx.fillStyle = '#fff';
@@ -580,7 +610,7 @@
             tempCtx.textBaseline = 'middle';
             
             lines.forEach((line, i) => {
-                const y = (i + 0.5) * lineHeight + 15;
+                const y = (i + 0.5) * lineHeight + 20;
                 tempCtx.fillText(line, tempCanvas.width / 2, y);
             });
             
@@ -605,13 +635,16 @@
 
         function triggerCurrentMessageFade() {
             particles.forEach(p => {
-                if (p.messageId === currentMessageId && !p.isFinal) {
+                if (!p.isFinal) {
                     p.triggerFade();
                 }
             });
         }
 
         function launchFireworks(text, isFinal) {
+            if (isLaunching) return;
+            isLaunching = true;
+            
             const cfg = CONFIG.mainFireworks;
             const delayCfg = CONFIG.delays;
             
@@ -620,12 +653,12 @@
             
             const textPositions = getTextParticles(text, centerX, centerY);
             
+            updateProgress(currentMessageIndex, CONFIG.messages.length);
+            
             if (textPositions.length === 0) {
-                console.log('No positions found for:', text);
-                // Skip to next message
-                setTimeout(() => {
-                    proceedToNextMessage();
-                }, 500);
+                console.log('No positions for:', text);
+                isLaunching = false;
+                setTimeout(() => proceedToNextMessage(), 100);
                 return;
             }
             
@@ -636,7 +669,7 @@
             
             const rocketTargets = [];
             for (let i = 0; i < rocketCount; i++) {
-                const offsetX = (i - (rocketCount - 1) / 2) * 50;
+                const offsetX = (i - (rocketCount - 1) / 2) * 40;
                 rocketTargets.push({ x: centerX + offsetX, y: centerY });
             }
             
@@ -647,6 +680,7 @@
             holdFrameCount = 0;
             formSoundPlayed = false;
             
+            let launchedCount = 0;
             rocketTargets.forEach((target, idx) => {
                 setTimeout(() => {
                     playLaunchSound();
@@ -657,6 +691,10 @@
                     rocket.isFinal = isFinal;
                     rocket.messageId = messageId;
                     rockets.push(rocket);
+                    launchedCount++;
+                    if (launchedCount >= rocketCount) {
+                        isLaunching = false;
+                    }
                 }, idx * delayCfg.rocketLaunchInterval);
             });
         }
@@ -673,7 +711,10 @@
         }
 
         function proceedToNextMessage() {
+            if (isLaunching) return;
+            
             currentMessageIndex++;
+            
             if (currentMessageIndex < CONFIG.messages.length) {
                 const isFinal = currentMessageIndex === CONFIG.messages.length - 1;
                 
@@ -683,6 +724,9 @@
                     formSoundPlayed = false;
                     launchFireworks(CONFIG.messages[currentMessageIndex], isFinal);
                 }, CONFIG.delays.nextMessageDelay);
+            } else {
+                // All messages done
+                updateProgress(CONFIG.messages.length - 1, CONFIG.messages.length);
             }
         }
 
@@ -749,7 +793,7 @@
                 setInterval(playChord, cfg.chordInterval);
 
             } catch (e) {
-                console.log('Audio failed:', e);
+                console.log('Audio init failed:', e);
             }
         }
 
@@ -819,16 +863,14 @@
                 p.draw();
             });
 
-            // Play form sound when all particles are formed
+            // Play form sound
             if (!formSoundPlayed && checkAllFormed() && particles.length > 0) {
                 formSoundPlayed = true;
-                setTimeout(() => {
-                    playFormSound();
-                }, CONFIG.delays.formSoundDelay);
+                setTimeout(playFormSound, CONFIG.delays.formSoundDelay);
             }
 
-            // Count hold frames and trigger next message
-            if (isShowingMessage && !canLaunchNext && checkAllHolding()) {
+            // Trigger next message
+            if (isShowingMessage && !canLaunchNext && !isLaunching && checkAllHolding()) {
                 holdFrameCount++;
                 
                 if (holdFrameCount >= CONFIG.delays.triggerNextAfterHoldFrames) {
@@ -837,7 +879,7 @@
                 }
             }
 
-            // Clean up dead particles (but keep final ones)
+            // Cleanup particles
             particles = particles.filter(p => p.alpha > 0 || p.isFinal);
 
             requestAnimationFrame(animate);
@@ -846,6 +888,9 @@
         // ==================== START ====================
         async function start() {
             await initAudio();
+            
+            console.log(`Starting fireworks with ${CONFIG.messages.length} messages`);
+            updateProgress(0, CONFIG.messages.length);
             
             setTimeout(() => {
                 launchFireworks(CONFIG.messages[0], CONFIG.messages.length === 1);
@@ -862,4 +907,3 @@
     </script>
 </body>
 </html>
-
