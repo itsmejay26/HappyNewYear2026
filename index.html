@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -89,26 +90,15 @@
             "Again, Happy New Year",
             "Always wishing you the best - Jay"
         ],
-        // Advance config:
-        // type: 'fixed'  -> leadTime is used as ms (backwards-compatible)
-        // type: 'relative' -> leadTime is computed as displayMs * factor, optionally clamped by min/max
         advance: {
-            type: 'fixed',   // 'fixed' or 'relative'
-            leadTime: 1000,   // used when type === 'fixed' (ms)
-            // when type === 'relative':
-            factor: 0.5,      // fraction of displayMs to use as lead (0..1)
-            min: 0,           // optional clamp min ms (set null or 0 to disable)
-            max: 5000         // optional clamp max ms (set null to disable)
+            type: 'fixed',
+            leadTime: 1000,
+            factor: 0.5,
+            min: 0,
+            max: 5000
         },
-
-        // convenient text display min/max (ms)
-        textDisplay: {
-            min: 2000, // minimum time the formed text stays visible
-            max: 5000  // maximum time for longest messages
-        },
-
+        textDisplay: { min: 2000, max: 5000 },
         stars: { count: 100, minSize: 0.3, maxSize: 1.5, twinkleSpeed: { min: 0.005, max: 0.02 }, coloredStarChance: 0.15 },
-
         bgFireworks: {
             spawnChance: 0.01,
             rocketSpeed: { min: 1, max: 2 },
@@ -118,7 +108,6 @@
             particleDecay: { min: 0.008, max: 0.015 },
             trailLength: 15
         },
-
         mainFireworks: {
             rocketSpeed: 3,
             rocketTrailLength: 20,
@@ -135,32 +124,19 @@
             maxRockets: 3,
             particlesPerRocket: 300
         },
-
         text: { maxFontSize: 38, fontSizeRatio: 12, maxWidthRatio: 0.9, lineHeightRatio: 1.4 },
-
         colors: { hueSpeed: { min: 2, max: 4 }, saturation: 100, lightness: 80, particleAlpha: 1 },
-
-        delays: {
-            startDelay: 1000,
-            rocketLaunchInterval: 80,
-            nextMessageDelay: 200,
-            triggerNextAfterHoldFrames: 60,
-            formSoundDelay: 0
-        },
-
-        // AUDIO config: paths/volumes
+        delays: { startDelay: 1000, rocketLaunchInterval: 80, nextMessageDelay: 200, triggerNextAfterHoldFrames: 60, formSoundDelay: 0 },
         audio: {
             enabled: true,
-            // SFX sources - change to your GitHub raw URLs if you host them there
-            musicSrc: 'music.mp3',        // <-- point to your raw GitHub URL or local file
-            whistleSrc: 'whistle.mp3',   // launch fly sound
-            popSrc: 'pop.mp3',           // particle spread
-            clusterSrc: 'cluster.mp3',   // cluster after pop
-
-            // volumes (0.0 .. 1.0)
-            musicVolume: 0.3,   // background music default 30%
-            sfxVolume: 1.0,     // main fireworks SFX volume
-            bgSfxVolume: 0.5    // background fireworks SFX volume (50% less by default)
+            // update these with your raw GitHub URLs if you host there
+            musicSrc: 'music.mp3',
+            whistleSrc: 'whistle.mp3',
+            popSrc: 'pop.mp3',
+            clusterSrc: 'cluster.mp3',
+            musicVolume: 0.3,
+            sfxVolume: 1.0,
+            bgSfxVolume: 0.5
         }
     };
 
@@ -196,99 +172,51 @@
     }
 
     // ==================== STARS ====================
-    class Star {
-        constructor() { this.reset(); }
-        reset() {
-            const cfg = CONFIG.stars;
-            this.x = Math.random() * starsCanvas.width;
-            this.y = Math.random() * starsCanvas.height;
-            this.size = Math.random() * (cfg.maxSize - cfg.minSize) + cfg.minSize;
-            this.twinkleSpeed = Math.random() * (cfg.twinkleSpeed.max - cfg.twinkleSpeed.min) + cfg.twinkleSpeed.min;
-            this.opacity = Math.random();
-            this.twinkleDir = Math.random() > 0.5 ? 1 : -1;
-            this.isColored = Math.random() < cfg.coloredStarChance;
-            this.hue = Math.random() * 60 + 200;
-        }
-        update() {
-            this.opacity += this.twinkleSpeed * this.twinkleDir;
-            if (this.opacity >= 1) { this.opacity = 1; this.twinkleDir = -1; }
-            if (this.opacity <= 0.2) { this.opacity = 0.2; this.twinkleDir = 1; }
-        }
-        draw() {
-            starsCtx.beginPath();
-            starsCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            if (this.isColored) starsCtx.fillStyle = `hsla(${this.hue}, 60%, 80%, ${this.opacity})`;
-            else starsCtx.fillStyle = `rgba(255,255,255,${this.opacity})`;
-            starsCtx.fill();
-        }
-    }
-
-    const stars = [];
-    for (let i = 0; i < CONFIG.stars.count; i++) stars.push(new Star());
+    class Star { constructor() { this.reset(); } reset() {
+        const cfg = CONFIG.stars;
+        this.x = Math.random() * starsCanvas.width; this.y = Math.random() * starsCanvas.height;
+        this.size = Math.random() * (cfg.maxSize - cfg.minSize) + cfg.minSize;
+        this.twinkleSpeed = Math.random() * (cfg.twinkleSpeed.max - cfg.twinkleSpeed.min) + cfg.twinkleSpeed.min;
+        this.opacity = Math.random(); this.twinkleDir = Math.random() > 0.5 ? 1 : -1;
+        this.isColored = Math.random() < cfg.coloredStarChance; this.hue = Math.random() * 60 + 200;
+    } update() { this.opacity += this.twinkleSpeed * this.twinkleDir;
+        if (this.opacity >= 1) { this.opacity = 1; this.twinkleDir = -1; }
+        if (this.opacity <= 0.2) { this.opacity = 0.2; this.twinkleDir = 1; }
+    } draw() { starsCtx.beginPath(); starsCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        if (this.isColored) starsCtx.fillStyle = `hsla(${this.hue}, 60%, 80%, ${this.opacity})`;
+        else starsCtx.fillStyle = `rgba(255,255,255,${this.opacity})`; starsCtx.fill();
+    } }
+    const stars = []; for (let i = 0; i < CONFIG.stars.count; i++) stars.push(new Star());
     function animateStars() { starsCtx.clearRect(0, 0, starsCanvas.width, starsCanvas.height); stars.forEach(s => { s.update(); s.draw(); }); requestAnimationFrame(animateStars); }
 
     // ==================== BACKGROUND FIREWORKS ====================
-    class BgRocket {
-        constructor() {
-            const cfg = CONFIG.bgFireworks;
-            this.x = Math.random() * bgFireworksCanvas.width;
-            this.y = bgFireworksCanvas.height + 5;
+    class BgRocket { constructor() {
+            const cfg = CONFIG.bgFireworks; this.x = Math.random() * bgFireworksCanvas.width; this.y = bgFireworksCanvas.height + 5;
             this.targetY = Math.random() * bgFireworksCanvas.height * 0.4 + bgFireworksCanvas.height * 0.1;
             this.speed = Math.random() * (cfg.rocketSpeed.max - cfg.rocketSpeed.min) + cfg.rocketSpeed.min;
-            this.trail = [];
-            this.exploded = false;
-            this.hue = Math.random() * 360;
-            this.particlesCreated = false;
-        }
-        update() {
-            if (this.exploded) return;
-            this.trail.push({ x: this.x, y: this.y });
+            this.trail = []; this.exploded = false; this.hue = Math.random() * 360; this.particlesCreated = false;
+        } update() {
+            if (this.exploded) return; this.trail.push({ x: this.x, y: this.y });
             if (this.trail.length > CONFIG.bgFireworks.trailLength) this.trail.shift();
-            this.y -= this.speed;
-            if (this.y <= this.targetY) this.exploded = true;
-        }
-        draw() {
+            this.y -= this.speed; if (this.y <= this.targetY) this.exploded = true;
+        } draw() {
             if (this.exploded) return;
             this.trail.forEach((t, i) => {
-                const alpha = (i / this.trail.length) * 0.3;
-                bfCtx.beginPath();
-                bfCtx.arc(t.x, t.y, 1.2, 0, Math.PI * 2);
-                bfCtx.fillStyle = `rgba(255,220,150,${alpha})`;
-                bfCtx.fill();
+                const alpha = (i / this.trail.length) * 0.3; bfCtx.beginPath(); bfCtx.arc(t.x, t.y, 1.2, 0, Math.PI * 2);
+                bfCtx.fillStyle = `rgba(255,220,150,${alpha})`; bfCtx.fill();
             });
-            bfCtx.beginPath();
-            bfCtx.arc(this.x, this.y, 2, 0, Math.PI * 2);
-            bfCtx.fillStyle = '#fff';
-            bfCtx.fill();
-        }
-    }
-
-    class BgParticle {
-        constructor(x, y, hue) {
-            const cfg = CONFIG.bgFireworks;
-            this.x = x; this.y = y; this.hue = hue + (Math.random() - 0.5) * 40;
-            const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * (cfg.particleSpeed.max - cfg.particleSpeed.min) + cfg.particleSpeed.min;
-            this.vx = Math.cos(angle) * speed;
-            this.vy = Math.sin(angle) * speed;
-            this.alpha = 0.9;
+            bfCtx.beginPath(); bfCtx.arc(this.x, this.y, 2, 0, Math.PI * 2); bfCtx.fillStyle = '#fff'; bfCtx.fill();
+        } }
+    class BgParticle { constructor(x, y, hue) {
+            const cfg = CONFIG.bgFireworks; this.x = x; this.y = y; this.hue = hue + (Math.random() - 0.5) * 40;
+            const angle = Math.random() * Math.PI * 2; const speed = Math.random() * (cfg.particleSpeed.max - cfg.particleSpeed.min) + cfg.particleSpeed.min;
+            this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed; this.alpha = 0.9;
             this.decay = Math.random() * (cfg.particleDecay.max - cfg.particleDecay.min) + cfg.particleDecay.min;
             this.size = Math.random() * (cfg.particleSize.max - cfg.particleSize.min) + cfg.particleSize.min;
-        }
-        update() {
-            this.x += this.vx; this.y += this.vy;
-            this.vy += 0.02; this.vx *= 0.98; this.vy *= 0.98;
-            this.alpha -= this.decay;
-        }
-        draw() {
-            if (this.alpha <= 0) return;
-            bfCtx.beginPath();
-            bfCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            bfCtx.fillStyle = `hsla(${this.hue}, 100%, 70%, ${this.alpha * 0.6})`;
-            bfCtx.fill();
-        }
-    }
-
+        } update() { this.x += this.vx; this.y += this.vy; this.vy += 0.02; this.vx *= 0.98; this.vy *= 0.98; this.alpha -= this.decay; }
+        draw() { if (this.alpha <= 0) return; bfCtx.beginPath(); bfCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            bfCtx.fillStyle = `hsla(${this.hue}, 100%, 70%, ${this.alpha * 0.6})`; bfCtx.fill();
+        } }
     let bgRockets = [], bgParticles = [];
     function animateBgFireworks() {
         bfCtx.clearRect(0, 0, bgFireworksCanvas.width, bgFireworksCanvas.height);
@@ -301,92 +229,38 @@
     }
 
     // ==================== MAIN TEXT FIREWORKS ====================
-    // message indexing and ids:
-    let globalMessageIdCounter = 0;      // generates unique ids for launched messages
-    const activeMessageIdMap = {};       // map: messageIndex -> messageId
-    const prelaunchedIndices = new Set();// indices already prelaunched
-    let scheduledMessageIndex = null;    // index currently scheduled for display timeout
+    let globalMessageIdCounter = 0;
+    const activeMessageIdMap = {};
+    const prelaunchedIndices = new Set();
+    let scheduledMessageIndex = null;
     let holdTimeout = null;
 
-    class Particle {
-        constructor(x, y, targetX, targetY, messageId) {
-            const cfg = CONFIG.mainFireworks;
-            const colorCfg = CONFIG.colors;
+    class Particle { constructor(x, y, targetX, targetY, messageId) {
+            const cfg = CONFIG.mainFireworks; const colorCfg = CONFIG.colors;
             this.x = x; this.y = y; this.targetX = targetX; this.targetY = targetY;
             this.size = cfg.particleSize; this.alpha = colorCfg.particleAlpha; this.messageId = messageId;
-            this.hueOffset = Math.random() * 360;
-            this.hueSpeed = Math.random() * (colorCfg.hueSpeed.max - colorCfg.hueSpeed.min) + colorCfg.hueSpeed.min;
-            const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * (cfg.explosionSpeed.max - cfg.explosionSpeed.min) + cfg.explosionSpeed.min;
-            this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
-            this.phase = 'explode'; this.explodeTime = 0;
+            this.hueOffset = Math.random() * 360; this.hueSpeed = Math.random() * (colorCfg.hueSpeed.max - colorCfg.hueSpeed.min) + colorCfg.hueSpeed.min;
+            const angle = Math.random() * Math.PI * 2; const speed = Math.random() * (cfg.explosionSpeed.max - cfg.explosionSpeed.min) + cfg.explosionSpeed.min;
+            this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed; this.phase = 'explode'; this.explodeTime = 0;
             this.maxExplodeTime = Math.random() * (cfg.explosionDuration.max - cfg.explosionDuration.min) + cfg.explosionDuration.min;
             this.holdTime = 0; this.maxHoldTime = cfg.holdDuration; this.friction = 0.97; this.isFinal = false;
             this.fallSpeedY = 0; this.fallSpeedX = (Math.random() - 0.5) * 0.5;
-        }
-        triggerFade() { if (this.phase === 'hold') { this.phase = 'fade'; this.fallSpeedY = 0; } }
-        update() {
-            const cfg = CONFIG.mainFireworks;
-            this.hueOffset += this.hueSpeed; if (this.hueOffset > 360) this.hueOffset -= 360;
-            if (this.phase === 'explode') {
-                this.vx *= this.friction; this.vy *= this.friction; this.x += this.vx; this.y += this.vy; this.explodeTime++;
-                if (this.explodeTime >= this.maxExplodeTime) this.phase = 'form';
-            } else if (this.phase === 'form') {
-                const dx = this.targetX - this.x; const dy = this.targetY - this.y;
-                this.x += dx * cfg.formingSpeed; this.y += dy * cfg.formingSpeed;
-                if (Math.abs(dx) < 0.8 && Math.abs(dy) < 0.8) { this.x = this.targetX; this.y = this.targetY; this.phase = 'hold'; this.holdTime = 0; }
-            } else if (this.phase === 'hold') {
-                this.x = this.targetX + (Math.random() - 0.5) * 0.3; this.y = this.targetY + (Math.random() - 0.5) * 0.3;
-                this.holdTime++;
-                if (!this.isFinal && this.holdTime >= this.maxHoldTime) { this.phase = 'fade'; this.fallSpeedY = 0; }
-            } else if (this.phase === 'fade') {
-                this.fallSpeedY += cfg.fallAcceleration;
-                this.y += cfg.fallSpeed + this.fallSpeedY;
-                this.x += this.fallSpeedX + (Math.random() - 0.5) * cfg.fallDrift;
-                this.alpha -= cfg.fadeSpeed;
-                this.size = cfg.particleSize * (0.5 + Math.random() * 0.5);
-            }
-        }
-        draw() {
-            if (this.alpha <= 0) return;
-            const colorCfg = CONFIG.colors;
-            const hue = this.hueOffset % 360;
-            fCtx.beginPath(); fCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            fCtx.fillStyle = `hsla(${hue}, ${colorCfg.saturation}%, ${colorCfg.lightness}%, ${this.alpha})`;
-            fCtx.fill();
-        }
-    }
+        } triggerFade() { if (this.phase === 'hold') { this.phase = 'fade'; this.fallSpeedY = 0; } } update() {
+            const cfg = CONFIG.mainFireworks; this.hueOffset += this.hueSpeed; if (this.hueOffset > 360) this.hueOffset -= 360;
+            if (this.phase === 'explode') { this.vx *= this.friction; this.vy *= this.friction; this.x += this.vx; this.y += this.vy; this.explodeTime++; if (this.explodeTime >= this.maxExplodeTime) this.phase = 'form'; }
+            else if (this.phase === 'form') { const dx = this.targetX - this.x; const dy = this.targetY - this.y; this.x += dx * cfg.formingSpeed; this.y += dy * cfg.formingSpeed; if (Math.abs(dx) < 0.8 && Math.abs(dy) < 0.8) { this.x = this.targetX; this.y = this.targetY; this.phase = 'hold'; this.holdTime = 0; } }
+            else if (this.phase === 'hold') { this.x = this.targetX + (Math.random() - 0.5) * 0.3; this.y = this.targetY + (Math.random() - 0.5) * 0.3; this.holdTime++; if (!this.isFinal && this.holdTime >= this.maxHoldTime) { this.phase = 'fade'; this.fallSpeedY = 0; } }
+            else if (this.phase === 'fade') { this.fallSpeedY += cfg.fallAcceleration; this.y += cfg.fallSpeed + this.fallSpeedY; this.x += this.fallSpeedX + (Math.random() - 0.5) * cfg.fallDrift; this.alpha -= cfg.fadeSpeed; this.size = cfg.particleSize * (0.5 + Math.random() * 0.5); }
+        } draw() { if (this.alpha <= 0) return; const colorCfg = CONFIG.colors; const hue = this.hueOffset % 360; fCtx.beginPath(); fCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2); fCtx.fillStyle = `hsla(${hue}, ${colorCfg.saturation}%, ${colorCfg.lightness}%, ${this.alpha})`; fCtx.fill(); } }
 
-    class Rocket {
-        constructor(targetX, targetY, messageIndex, messageId) {
+    class Rocket { constructor(targetX, targetY, messageIndex, messageId) {
             const cfg = CONFIG.mainFireworks;
-            this.x = fireworksCanvas.width / 2 + (Math.random() - 0.5) * 120;
-            this.y = fireworksCanvas.height + 10;
+            this.x = fireworksCanvas.width / 2 + (Math.random() - 0.5) * 120; this.y = fireworksCanvas.height + 10;
             this.targetX = targetX; this.targetY = targetY; this.speed = cfg.rocketSpeed;
-            this.trail = []; this.exploded = false; this.particlesCreated = false;
-            this.messageIndex = messageIndex;
-            this.messageId = messageId;
+            this.trail = []; this.exploded = false; this.particlesCreated = false; this.messageIndex = messageIndex; this.messageId = messageId;
             const dx = this.targetX - this.x; const dy = this.targetY - this.y; const dist = Math.sqrt(dx * dx + dy * dy);
             this.vx = (dx / dist) * this.speed; this.vy = (dy / dist) * this.speed;
-        }
-        update() {
-            if (this.exploded) return;
-            this.trail.push({ x: this.x, y: this.y });
-            if (this.trail.length > CONFIG.mainFireworks.rocketTrailLength) this.trail.shift();
-            this.x += this.vx; this.y += this.vy;
-            const dx = this.targetX - this.x; const dy = this.targetY - this.y;
-            if (Math.sqrt(dx * dx + dy * dy) < 10) this.exploded = true;
-        }
-        draw() {
-            if (this.exploded) return;
-            this.trail.forEach((t, i) => {
-                const alpha = (i / this.trail.length) * 0.5;
-                fCtx.beginPath(); fCtx.arc(t.x, t.y, 1, 0, Math.PI * 2);
-                fCtx.fillStyle = `rgba(255,240,200,${alpha})`; fCtx.fill();
-            });
-            fCtx.beginPath(); fCtx.arc(this.x, this.y, 2, 0, Math.PI * 2); fCtx.fillStyle = '#fff'; fCtx.fill();
-        }
-    }
+        } update() { if (this.exploded) return; this.trail.push({ x: this.x, y: this.y }); if (this.trail.length > CONFIG.mainFireworks.rocketTrailLength) this.trail.shift(); this.x += this.vx; this.y += this.vy; const dx = this.targetX - this.x; const dy = this.targetY - this.y; if (Math.sqrt(dx * dx + dy * dy) < 10) this.exploded = true; } draw() { if (this.exploded) return; this.trail.forEach((t, i) => { const alpha = (i / this.trail.length) * 0.5; fCtx.beginPath(); fCtx.arc(t.x, t.y, 1, 0, Math.PI * 2); fCtx.fillStyle = `rgba(255,240,200,${alpha})`; fCtx.fill(); }); fCtx.beginPath(); fCtx.arc(this.x, this.y, 2, 0, Math.PI * 2); fCtx.fillStyle = '#fff'; fCtx.fill(); } }
 
     let particles = [], rockets = [];
     let currentMessageIndex = 0;
@@ -396,27 +270,18 @@
     // ==================== TEXT HELPERS ====================
     function wrapText(ctx, text, maxWidth) {
         const words = text.split(' ');
-        const lines = [];
-        let currentLine = '';
+        const lines = []; let currentLine = '';
         words.forEach(word => {
             const testLine = currentLine ? currentLine + ' ' + word : word;
             const metrics = ctx.measureText(testLine);
-            if (metrics.width > maxWidth && currentLine) {
-                lines.push(currentLine);
-                currentLine = word;
-            } else {
-                currentLine = testLine;
-            }
+            if (metrics.width > maxWidth && currentLine) { lines.push(currentLine); currentLine = word; } else { currentLine = testLine; }
         });
-        if (currentLine) lines.push(currentLine);
-        return lines;
+        if (currentLine) lines.push(currentLine); return lines;
     }
 
     function getTextParticles(text, centerX, centerY) {
-        const cfg = CONFIG.text;
-        const mainCfg = CONFIG.mainFireworks;
-        const tempCanvas = document.createElement('canvas');
-        const tempCtx = tempCanvas.getContext('2d');
+        const cfg = CONFIG.text; const mainCfg = CONFIG.mainFireworks;
+        const tempCanvas = document.createElement('canvas'); const tempCtx = tempCanvas.getContext('2d');
         const maxWidth = fireworksCanvas.width * cfg.maxWidthRatio;
         let fontSize = Math.min(cfg.maxFontSize, fireworksCanvas.width / cfg.fontSizeRatio);
         tempCtx.font = `bold ${fontSize}px Arial`;
@@ -425,186 +290,83 @@
         const totalHeight = lines.length * lineHeight;
         let maxLineWidth = 0;
         lines.forEach(line => { const w = tempCtx.measureText(line).width; if (w > maxLineWidth) maxLineWidth = w; });
-        tempCanvas.width = Math.max(maxLineWidth + 30, 100);
-        tempCanvas.height = Math.max(totalHeight + 30, 50);
-        tempCtx.font = `bold ${fontSize}px Arial`;
-        tempCtx.fillStyle = '#fff';
-        tempCtx.textAlign = 'center';
-        tempCtx.textBaseline = 'middle';
-        lines.forEach((line, i) => {
-            const y = (i + 0.5) * lineHeight + 15;
-            tempCtx.fillText(line, tempCanvas.width / 2, y);
-        });
+        tempCanvas.width = Math.max(maxLineWidth + 30, 100); tempCanvas.height = Math.max(totalHeight + 30, 50);
+        tempCtx.font = `bold ${fontSize}px Arial`; tempCtx.fillStyle = '#fff'; tempCtx.textAlign = 'center'; tempCtx.textBaseline = 'middle';
+        lines.forEach((line, i) => { const y = (i + 0.5) * lineHeight + 15; tempCtx.fillText(line, tempCanvas.width / 2, y); });
         const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-        const positions = [];
-        const spacing = mainCfg.particleSpacing;
+        const positions = []; const spacing = mainCfg.particleSpacing;
         for (let y = 0; y < tempCanvas.height; y += spacing) {
             for (let x = 0; x < tempCanvas.width; x += spacing) {
                 const i = (y * tempCanvas.width + x) * 4;
-                if (imageData.data[i + 3] > 128) {
-                    positions.push({ x: x - tempCanvas.width / 2 + centerX, y: y - tempCanvas.height / 2 + centerY });
-                }
+                if (imageData.data[i + 3] > 128) { positions.push({ x: x - tempCanvas.width / 2 + centerX, y: y - tempCanvas.height / 2 + centerY }); }
             }
         }
         return positions;
     }
 
-    function clearHoldTimer() {
-        if (holdTimeout) { clearTimeout(holdTimeout); holdTimeout = null; scheduledMessageIndex = null; }
-    }
+    function clearHoldTimer() { if (holdTimeout) { clearTimeout(holdTimeout); holdTimeout = null; scheduledMessageIndex = null; } }
+    function triggerCurrentMessageFade() { clearHoldTimer(); const activeId = activeMessageIdMap[currentMessageIndex]; particles.forEach(p => { if (p.messageId === activeId && !p.isFinal) { p.triggerFade(); } }); }
 
-    function triggerCurrentMessageFade() {
-        clearHoldTimer();
-        const activeId = activeMessageIdMap[currentMessageIndex];
-        particles.forEach(p => {
-            if (p.messageId === activeId && !p.isFinal) {
-                p.triggerFade();
-            }
-        });
-    }
-
-    // Launch fireworks for a specific message index.
+    // Launch fireworks
     function launchFireworksForIndex(index, isFinal) {
-        const cfg = CONFIG.mainFireworks;
-        const delayCfg = CONFIG.delays;
-        const centerX = fireworksCanvas.width / 2;
-        const centerY = fireworksCanvas.height / 2;
-        const text = CONFIG.messages[index];
-        const textPositions = getTextParticles(text, centerX, centerY);
-
-        if (textPositions.length === 0) {
-            console.log('No positions found for index:', index, text);
-            // schedule proceed for next (safe skip)
-            setTimeout(() => { safeProceedFromIndex(index); }, 500);
-            return;
-        }
-
-        // create unique messageId for this index if not already created
-        if (!activeMessageIdMap.hasOwnProperty(index)) {
-            globalMessageIdCounter++;
-            activeMessageIdMap[index] = globalMessageIdCounter;
-        }
+        const cfg = CONFIG.mainFireworks; const delayCfg = CONFIG.delays;
+        const centerX = fireworksCanvas.width / 2; const centerY = fireworksCanvas.height / 2;
+        const text = CONFIG.messages[index]; const textPositions = getTextParticles(text, centerX, centerY);
+        if (textPositions.length === 0) { console.log('No positions found for index:', index, text); setTimeout(() => { safeProceedFromIndex(index); }, 500); return; }
+        if (!activeMessageIdMap.hasOwnProperty(index)) { globalMessageIdCounter++; activeMessageIdMap[index] = globalMessageIdCounter; }
         const messageId = activeMessageIdMap[index];
-
         const rocketCount = Math.min(cfg.maxRockets, Math.max(1, Math.ceil(textPositions.length / cfg.particlesPerRocket)));
         const rocketTargets = [];
-        for (let i = 0; i < rocketCount; i++) {
-            const offsetX = (i - (rocketCount - 1) / 2) * 50;
-            rocketTargets.push({ x: centerX + offsetX, y: centerY });
-        }
+        for (let i = 0; i < rocketCount; i++) { const offsetX = (i - (rocketCount - 1) / 2) * 50; rocketTargets.push({ x: centerX + offsetX, y: centerY }); }
         const particlesPerRocket = Math.ceil(textPositions.length / rocketCount);
-
-        // mark as prelaunched if index is not current
         if (index !== currentMessageIndex) prelaunchedIndices.add(index);
-
-        // set flags (only set isShowing/canLaunchNext when this is the active current index)
-        if (index === currentMessageIndex) {
-            isShowingMessage = true;
-            canLaunchNext = false;
-            formSoundPlayed = false;
-        }
-
+        if (index === currentMessageIndex) { isShowingMessage = true; canLaunchNext = false; formSoundPlayed = false; }
         rocketTargets.forEach((target, idx) => {
             setTimeout(() => {
                 playLaunchSound();
                 const rocket = new Rocket(target.x, target.y, index, messageId);
                 rocket.particleStart = idx * particlesPerRocket;
                 rocket.particleEnd = Math.min((idx + 1) * particlesPerRocket, textPositions.length);
-                rocket.textPositions = textPositions;
-                rocket.isFinal = isFinal;
-                rocket.messageId = messageId;
+                rocket.textPositions = textPositions; rocket.isFinal = isFinal; rocket.messageId = messageId;
                 rockets.push(rocket);
             }, idx * delayCfg.rocketLaunchInterval);
         });
-
-        // fallback: if this launched message stalls (no particles or fade) - proceed safely
         setTimeout(() => {
-            // only act if this message id is still the latest assigned for that index
             const currentAssignedId = activeMessageIdMap[index];
             const currentParticles = particles.filter(p => p.messageId === currentAssignedId);
             const stalled = currentParticles.length === 0 || currentParticles.every(p => p.phase === 'fade' || p.alpha <= 0);
-            if (stalled) {
-                console.log('Fallback for index', index, '-> forcing safe proceed');
-                safeProceedFromIndex(index);
-            }
+            if (stalled) { console.log('Fallback for index', index, '-> forcing safe proceed'); safeProceedFromIndex(index); }
         }, 7000);
     }
 
-    function safeProceedFromIndex(index) {
-        if (index === currentMessageIndex) {
-            proceedToNextMessage();
-        } else {
-            prelaunchedIndices.delete(index);
-        }
-    }
-
-    function createParticles(rocket) {
-        playExplosionSound();
-        for (let i = rocket.particleStart; i < rocket.particleEnd; i++) {
-            const pos = rocket.textPositions[i];
-            const p = new Particle(rocket.x, rocket.y, pos.x, pos.y, rocket.messageId);
-            p.isFinal = rocket.isFinal;
-            particles.push(p);
-        }
-    }
+    function safeProceedFromIndex(index) { if (index === currentMessageIndex) { proceedToNextMessage(); } else { prelaunchedIndices.delete(index); } }
+    function createParticles(rocket) { playExplosionSound(); for (let i = rocket.particleStart; i < rocket.particleEnd; i++) { const pos = rocket.textPositions[i]; const p = new Particle(rocket.x, rocket.y, pos.x, pos.y, rocket.messageId); p.isFinal = rocket.isFinal; particles.push(p); } }
 
     function proceedToNextMessage() {
-        clearHoldTimer();
-        triggerCurrentMessageFade();
-        const nextIndex = currentMessageIndex + 1;
-        currentMessageIndex = nextIndex;
-
+        clearHoldTimer(); triggerCurrentMessageFade();
+        const nextIndex = currentMessageIndex + 1; currentMessageIndex = nextIndex;
         if (currentMessageIndex < CONFIG.messages.length) {
             const isFinal = currentMessageIndex === CONFIG.messages.length - 1;
-
-            if (prelaunchedIndices.has(currentMessageIndex)) {
-                isShowingMessage = true;
-                canLaunchNext = false;
-                formSoundPlayed = false;
-                prelaunchedIndices.delete(currentMessageIndex);
-            } else {
-                setTimeout(() => {
-                    formSoundPlayed = false;
-                    launchFireworksForIndex(currentMessageIndex, isFinal);
-                }, CONFIG.delays.nextMessageDelay);
-            }
+            if (prelaunchedIndices.has(currentMessageIndex)) { isShowingMessage = true; canLaunchNext = false; formSoundPlayed = false; prelaunchedIndices.delete(currentMessageIndex); }
+            else { setTimeout(() => { formSoundPlayed = false; launchFireworksForIndex(currentMessageIndex, isFinal); }, CONFIG.delays.nextMessageDelay); }
         }
     }
 
-    // ==================== AUDIO (replaced with real sample-based SFX + music) ====================
+    // ==================== AUDIO (sample-based SFX + music) ====================
     let audioStarted = false;
     let musicAudio = null;
-    const sfxPool = { whistle: CONFIG.audio.whistleSrc, pop: CONFIG.audio.popSrc, cluster: CONFIG.audio.clusterSrc };
 
     function createAudioElement(src, loop = false) {
         try {
             const a = new Audio(src);
-            a.loop = !!loop;
-            a.preload = 'auto';
-            a.crossOrigin = "anonymous";
-            return a;
-        } catch (e) {
-            console.warn('Audio creation failed for', src, e);
-            return null;
-        }
+            a.loop = !!loop; a.preload = 'auto'; a.crossOrigin = "anonymous"; return a;
+        } catch (e) { console.warn('Audio creation failed for', src, e); return null; }
     }
 
+    // initAudio preloads SFX (does NOT set audioStarted)
     async function initAudio() {
-        if (audioStarted || !CONFIG.audio.enabled) return;
+        if (!CONFIG.audio.enabled) return;
         try {
-            // set flag early to avoid double-init
-            audioStarted = true;
-
-            // music element
-            musicAudio = createAudioElement(CONFIG.audio.musicSrc, true);
-            if (musicAudio) {
-                musicAudio.volume = clampVolume(CONFIG.audio.musicVolume);
-                musicAudio.loop = true;
-                // start only after first user gesture (handled by start sequence)
-            }
-
-            // preload sfx (we will clone for overlapping)
-            // create single instances to warm up the browser
             if (CONFIG.audio.whistleSrc) {
                 const pre = createAudioElement(CONFIG.audio.whistleSrc);
                 if (pre) { pre.volume = clampVolume(CONFIG.audio.sfxVolume); pre.muted = true; pre.play().catch(()=>{}); setTimeout(()=>{ pre.pause(); pre.currentTime = 0; pre.muted = false; }, 200); }
@@ -617,21 +379,11 @@
                 const pre = createAudioElement(CONFIG.audio.clusterSrc);
                 if (pre) { pre.volume = clampVolume(CONFIG.audio.sfxVolume); pre.muted = true; pre.play().catch(()=>{}); setTimeout(()=>{ pre.pause(); pre.currentTime = 0; pre.muted = false; }, 200); }
             }
-
-            // Note: we are not using Tone.js synths for launch/explosion SFX anymore.
-            // music playback will be started by start() (after user gesture), since many browsers block auto-play.
-
-        } catch (e) {
-            console.log('Audio init failed:', e);
-        }
+        } catch (e) { console.log('Audio init failed:', e); }
     }
 
-    function clampVolume(v) {
-        if (typeof v !== 'number') return 1.0;
-        return Math.max(0, Math.min(1, v));
-    }
+    function clampVolume(v) { if (typeof v !== 'number') return 1.0; return Math.max(0, Math.min(1, v)); }
 
-    // Helper to play a cloned audio so overlapping is allowed
     function playSample(src, volume = 1.0) {
         if (!CONFIG.audio.enabled || !audioStarted || !src) return;
         try {
@@ -640,46 +392,13 @@
             a.volume = clampVolume(volume);
             a.preload = 'auto';
             a.play().catch((e)=>{ /* may fail depending on gesture */ });
-            // no need to keep reference; let the element be GC'd after playback
-        } catch (e) {
-            console.warn('playSample error', e);
-        }
+        } catch (e) { console.warn('playSample error', e); }
     }
 
-    // Replace previous Tone-based sound calls with sample playback
-    function playLaunchSound() {
-        if (!CONFIG.audio.enabled || !audioStarted) return;
-        // whistle = rocket fly sound
-        const volume = CONFIG.audio.sfxVolume;
-        playSample(CONFIG.audio.whistleSrc, volume);
-    }
-
-    function playExplosionSound() {
-        if (!CONFIG.audio.enabled || !audioStarted) return;
-        // pop then cluster
-        const vol = CONFIG.audio.sfxVolume;
-        playSample(CONFIG.audio.popSrc, vol);
-        // small delay then cluster
-        setTimeout(() => {
-            playSample(CONFIG.audio.clusterSrc, vol * 0.9);
-        }, 90);
-    }
-
-    function playBgExplosion() {
-        if (!CONFIG.audio.enabled || !audioStarted) return;
-        // background fireworks are quieter (bgSfxVolume)
-        const bgVol = CONFIG.audio.sfxVolume * clampVolume(CONFIG.audio.bgSfxVolume);
-        playSample(CONFIG.audio.popSrc, bgVol);
-    }
-
-    function playFormSound() {
-        // keep this quiet or use a subtle sample; for now, we use a very soft pop to mark form completion
-        if (!CONFIG.audio.enabled || !audioStarted) return;
-        const vol = CONFIG.audio.sfxVolume * 0.6;
-        // use cluster as a soft accent (or pop if cluster not present)
-        const src = CONFIG.audio.clusterSrc || CONFIG.audio.popSrc;
-        playSample(src, vol);
-    }
+    function playLaunchSound() { if (!CONFIG.audio.enabled || !audioStarted) return; const volume = CONFIG.audio.sfxVolume; playSample(CONFIG.audio.whistleSrc, volume); }
+    function playExplosionSound() { if (!CONFIG.audio.enabled || !audioStarted) return; const vol = CONFIG.audio.sfxVolume; playSample(CONFIG.audio.popSrc, vol); setTimeout(() => { playSample(CONFIG.audio.clusterSrc, vol * 0.9); }, 90); }
+    function playBgExplosion() { if (!CONFIG.audio.enabled || !audioStarted) return; const bgVol = CONFIG.audio.sfxVolume * clampVolume(CONFIG.audio.bgSfxVolume); playSample(CONFIG.audio.popSrc, bgVol); }
+    function playFormSound() { if (!CONFIG.audio.enabled || !audioStarted) return; const vol = CONFIG.audio.sfxVolume * 0.6; const src = CONFIG.audio.clusterSrc || CONFIG.audio.popSrc; playSample(src, vol); }
 
     // ==================== ANIMATION LOOP ====================
     function checkAllFormedForCurrent() {
@@ -690,52 +409,28 @@
         return currentParticles.every(p => p.phase === 'hold' || p.phase === 'fade');
     }
 
-    // compute leadTime depending on CONFIG.advance settings and displayMs
     function computeLead(displayMs) {
         const adv = CONFIG.advance || {};
         if (adv.type === 'relative') {
-            let factor = (typeof adv.factor === 'number') ? adv.factor : 0.5;
-            factor = Math.max(0, Math.min(1, factor));
-            let lead = Math.round(displayMs * factor);
-            if (typeof adv.min === 'number') lead = Math.max(lead, adv.min);
-            if (typeof adv.max === 'number') lead = Math.min(lead, adv.max);
+            let factor = (typeof adv.factor === 'number') ? adv.factor : 0.5; factor = Math.max(0, Math.min(1, factor));
+            let lead = Math.round(displayMs * factor); if (typeof adv.min === 'number') lead = Math.max(lead, adv.min); if (typeof adv.max === 'number') lead = Math.min(lead, adv.max);
             return Math.max(0, lead);
-        } else {
-            // fixed
-            return Math.max(0, adv.leadTime || 0);
-        }
+        } else { return Math.max(0, adv.leadTime || 0); }
     }
 
     function animate() {
         fCtx.clearRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
-
-        rockets.forEach(rocket => {
-            rocket.update(); rocket.draw();
-            if (rocket.exploded && !rocket.particlesCreated) {
-                rocket.particlesCreated = true;
-                createParticles(rocket);
-            }
-        });
+        rockets.forEach(rocket => { rocket.update(); rocket.draw(); if (rocket.exploded && !rocket.particlesCreated) { rocket.particlesCreated = true; createParticles(rocket); } });
         rockets = rockets.filter(r => !r.exploded);
-
         particles.forEach(p => { p.update(); p.draw(); });
-
-        // Play form sound when all particles for current message are formed
         if (!formSoundPlayed && checkAllFormedForCurrent() && particles.length > 0) {
-            formSoundPlayed = true;
-            setTimeout(() => { playFormSound(); }, CONFIG.delays.formSoundDelay);
-
-            // SCHEDULE display timeout when text has formed
+            formSoundPlayed = true; setTimeout(() => { playFormSound(); }, CONFIG.delays.formSoundDelay);
             if (scheduledMessageIndex !== currentMessageIndex) {
-                const text = CONFIG.messages[currentMessageIndex] || "";
-                const chars = text.length || 0;
-                const ratio = Math.min(1, chars / 80);
+                const text = CONFIG.messages[currentMessageIndex] || ""; const chars = text.length || 0; const ratio = Math.min(1, chars / 80);
                 const displayMs = CONFIG.textDisplay.min + Math.round(ratio * (CONFIG.textDisplay.max - CONFIG.textDisplay.min));
-
-                // schedule prelaunch of next message depending on advance settings
                 const nextIndex = currentMessageIndex + 1;
                 if (nextIndex < CONFIG.messages.length) {
-                    const lead = computeLead(displayMs); // NEW: computed from displayMs when type === 'relative'
+                    const lead = computeLead(displayMs);
                     const prelaunchDelay = Math.max(0, displayMs - lead);
                     setTimeout(() => {
                         if (!activeMessageIdMap.hasOwnProperty(nextIndex)) {
@@ -744,66 +439,64 @@
                         }
                     }, prelaunchDelay);
                 }
-
-                // schedule actual proceed (fade + switch) at displayMs
-                scheduledMessageIndex = currentMessageIndex;
-                clearHoldTimer();
-                holdTimeout = setTimeout(() => {
-                    canLaunchNext = true;
-                    proceedToNextMessage();
-                    scheduledMessageIndex = null;
-                    holdTimeout = null;
-                }, displayMs);
+                scheduledMessageIndex = currentMessageIndex; clearHoldTimer();
+                holdTimeout = setTimeout(() => { canLaunchNext = true; proceedToNextMessage(); scheduledMessageIndex = null; holdTimeout = null; }, displayMs);
             }
         }
-
-        // Clean up dead particles (but keep final ones)
         particles = particles.filter(p => p.alpha > 0 || p.isFinal);
-
         requestAnimationFrame(animate);
     }
 
     // ==================== START (only after user tap) ====================
     async function start() {
-        // initialize audio (preload etc.)
-        await initAudio();
-
-        // start music if available
-        if (musicAudio) {
-            try {
-                // ensure music starts from beginning
-                musicAudio.currentTime = 0;
-                musicAudio.play().catch((e)=>{ /* play may be blocked if not a user gesture; start() is triggered by gesture */ });
-            } catch (e) {
-                console.warn('music play failed', e);
-            }
-        }
-
-        // then schedule first fireworks (respect startDelay)
+        // All audio preloads already done in gesture handler. start() schedules first fireworks.
         setTimeout(() => { launchFireworksForIndex(0, CONFIG.messages.length === 1); }, CONFIG.delays.startDelay);
     }
 
-    animateStars();
-    animateBgFireworks();
-    animate();
+    animateStars(); animateBgFireworks(); animate();
 
-    // previously the script auto-started on DOMContentLoaded;
-    // now we show a "tap anywhere to start" overlay and start everything on first user tap/click.
-
+    // GESTURE HANDLER: create & play music in the gesture to avoid browser blocking
     const overlay = document.getElementById('start-overlay');
-    function onStartGesture(e) {
+
+    async function onStartGesture(e) {
         // hide overlay
-        if (overlay) {
-            overlay.style.display = 'none';
-            overlay.setAttribute('aria-hidden', 'true');
-        }
-        // mark audio ready and start everything
-        initAudio().then(() => {
-            // ensure audioStarted true
+        if (overlay) { overlay.style.display = 'none'; overlay.setAttribute('aria-hidden', 'true'); }
+
+        // preload sfx (this won't play music)
+        await initAudio();
+
+        // create music element and play immediately inside gesture
+        if (CONFIG.audio && CONFIG.audio.musicSrc) {
+            try {
+                musicAudio = createAudioElement(CONFIG.audio.musicSrc, true);
+                if (!musicAudio) musicAudio = new Audio(CONFIG.audio.musicSrc);
+                musicAudio.loop = true;
+                musicAudio.volume = clampVolume(CONFIG.audio.musicVolume);
+                musicAudio.muted = false;
+
+                // Attempt to play music right away (must be within user gesture to succeed)
+                await musicAudio.play();
+                audioStarted = true;
+                console.log('Background music started');
+            } catch (err) {
+                // If play() failed, log and still mark audioStarted so SFX can be played if possible.
+                console.warn('Background music play failed on gesture:', err);
+                // try one more unmuted attempt (some browsers require currentTime=0 / small timeout)
+                try {
+                    if (musicAudio) { musicAudio.currentTime = 0; await musicAudio.play(); audioStarted = true; console.log('Background music started on second attempt'); }
+                } catch (err2) {
+                    console.warn('Second attempt to play music also failed:', err2);
+                    // keep audioStarted = true so SFX triggered by user gesture may still play
+                    audioStarted = true;
+                }
+            }
+        } else {
+            // no music configured but still allow SFX
             audioStarted = true;
-            // start background music and animations/messages
-            start();
-        });
+        }
+
+        // start the fireworks/messages sequence
+        start();
 
         // remove listeners after first activation
         document.removeEventListener('pointerdown', onStartGesture);
@@ -815,13 +508,11 @@
     document.addEventListener('pointerdown', onStartGesture, { once: true });
     document.addEventListener('touchstart', onStartGesture, { once: true });
     document.addEventListener('click', onStartGesture, { once: true });
-
-    // also ensure overlay can be tapped (some devices may not bubble pointerdown)
     overlay.addEventListener('pointerdown', onStartGesture, { once: true });
     overlay.addEventListener('touchstart', onStartGesture, { once: true });
     overlay.addEventListener('click', onStartGesture, { once: true });
 
-    // ensure initAudio is at least prepared on interaction
+    // fallback: ensure SFX preload on first interaction if not captured above
     document.body.addEventListener('touchstart', () => { initAudio(); }, { once: true });
     document.body.addEventListener('click', () => { initAudio(); }, { once: true });
 </script>
