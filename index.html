@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>New Year 2026</title>
+    <title>Happy New Year 2026</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
         * {
@@ -14,18 +14,13 @@
         }
 
         body {
-            font-family: 'Georgia', serif;
-            background: linear-gradient(135deg, #000000 0%, #0a1628 50%, #000000 100%);
-            color: #fff;
+            font-family: 'Arial', sans-serif;
+            background: #000;
             min-height: 100vh;
             overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            perspective: 1500px;
         }
 
-        #particle-canvas {
+        #bg-canvas {
             position: fixed;
             top: 0;
             left: 0;
@@ -34,821 +29,837 @@
             z-index: 0;
         }
 
+        #stars-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        #bg-fireworks-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+
         #fireworks-canvas {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 100;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        #fireworks-canvas.active {
-            opacity: 1;
-        }
-
-        .container {
-            position: relative;
             z-index: 10;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .calendar-wrapper {
-            position: relative;
-            width: 280px;
-            height: 320px;
-            margin: 0 auto;
-            transform-style: preserve-3d;
-        }
-
-        .calendar-binding {
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 200px;
-            height: 30px;
-            background: linear-gradient(180deg, #8B4513 0%, #5D3A1A 50%, #8B4513 100%);
-            border-radius: 5px;
-            z-index: 50;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
-        }
-
-        .calendar-binding::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 15px;
-            right: 15px;
-            height: 4px;
-            transform: translateY(-50%);
-            background: repeating-linear-gradient(
-                90deg,
-                #222 0px,
-                #222 6px,
-                transparent 6px,
-                transparent 18px
-            );
-        }
-
-        .calendar-rings {
-            position: absolute;
-            top: -8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 180px;
-            display: flex;
-            justify-content: space-between;
-            z-index: 60;
-        }
-
-        .ring {
-            width: 20px;
-            height: 20px;
-            border: 3px solid #777;
-            border-radius: 50%;
-            background: transparent;
-        }
-
-        .calendar {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            transform-style: preserve-3d;
-        }
-
-        .calendar-page {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            border-radius: 5px;
-            box-shadow: 
-                0 2px 10px rgba(0, 0, 0, 0.3),
-                2px 0 5px rgba(0, 0, 0, 0.1);
-        }
-
-        .page-front {
-            background: linear-gradient(180deg, #ffffff 0%, #f8f8f8 100%);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            border: 1px solid #e0e0e0;
-        }
-
-        .page-front::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 40px;
-            background: linear-gradient(180deg, #cc0000 0%, #990000 100%);
-            border-radius: 5px 5px 0 0;
-        }
-
-        .page-back {
-            background: linear-gradient(180deg, #f0f0f0 0%, #e8e8e8 100%);
-            transform: rotateX(180deg);
-            border: 1px solid #d0d0d0;
-        }
-
-        .year-display {
-            font-size: 100px;
-            font-weight: 700;
-            color: #1a1a1a;
-            line-height: 1;
-            margin-top: 30px;
-            font-family: 'Georgia', serif;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .year-display.special {
-            animation: specialYear 0.8s ease-out forwards, specialGlow 1.5s ease-in-out infinite 0.8s;
-            color: #cc0000;
-        }
-
-        @keyframes specialYear {
-            0% {
-                transform: scale(0.5);
-                opacity: 0;
-            }
-            50% {
-                transform: scale(1.2);
-            }
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        @keyframes specialGlow {
-            0%, 100% {
-                text-shadow: 0 0 20px rgba(204, 0, 0, 0.5), 2px 2px 4px rgba(0, 0, 0, 0.1);
-            }
-            50% {
-                text-shadow: 0 0 40px rgba(204, 0, 0, 0.8), 0 0 60px rgba(255, 215, 0, 0.4), 2px 2px 4px rgba(0, 0, 0, 0.1);
-            }
-        }
-
-        .flipping-page {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            transform-origin: top center;
-            transform-style: preserve-3d;
-            z-index: 50;
-        }
-
-        .flipping-page .page-front,
-        .flipping-page .page-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-        }
-
-        .flip-animation {
-            animation: flipPage 0.5s ease-in-out forwards;
-        }
-
-        @keyframes flipPage {
-            0% {
-                transform: rotateX(0deg);
-            }
-            100% {
-                transform: rotateX(-180deg);
-            }
-        }
-
-        .stacked-pages {
-            position: absolute;
-            bottom: -8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            z-index: -1;
-        }
-
-        .stacked-page {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            height: 100%;
-            background: #fff;
-            border-radius: 0 0 5px 5px;
-            border: 1px solid #ddd;
-        }
-
-        .stacked-page:nth-child(1) { width: 96%; bottom: -2px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .stacked-page:nth-child(2) { width: 92%; bottom: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .stacked-page:nth-child(3) { width: 88%; bottom: -6px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); }
-
-        .next-button {
-            display: none;
-            margin-top: 50px;
-            padding: 18px 36px;
-            font-size: 16px;
-            font-weight: 600;
-            color: #000;
-            background: linear-gradient(135deg, #ffd700, #ffed4a, #ffd700);
-            background-size: 200% 200%;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 
-                0 5px 25px rgba(255, 215, 0, 0.5),
-                0 0 50px rgba(255, 215, 0, 0.2);
-            letter-spacing: 0.5px;
-            font-family: 'Georgia', serif;
-        }
-
-        .next-button:hover {
-            transform: translateY(-3px) scale(1.03);
-            box-shadow: 
-                0 8px 35px rgba(255, 215, 0, 0.6),
-                0 0 70px rgba(255, 215, 0, 0.3);
-        }
-
-        .next-button:active {
-            transform: translateY(0) scale(0.98);
-        }
-
-        .next-button.visible {
-            display: inline-block;
-            animation: fadeInUp 0.8s ease-out;
-        }
-
-        @keyframes fadeInUp {
-            0% { opacity: 0; transform: translateY(30px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-
-        .light-burst {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: radial-gradient(circle, rgba(255, 215, 0, 0.6) 0%, rgba(255, 215, 0, 0) 70%);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 4;
-            pointer-events: none;
-            opacity: 0;
-        }
-
-        .light-burst.active {
-            animation: lightBurst 1.2s ease-out forwards;
-        }
-
-        @keyframes lightBurst {
-            0% { width: 0; height: 0; opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { width: 150vmax; height: 150vmax; opacity: 0; }
-        }
-
-        @media (max-width: 360px) {
-            .calendar-wrapper {
-                width: 240px;
-                height: 280px;
-            }
-            .year-display {
-                font-size: 80px;
-            }
-            .next-button {
-                padding: 15px 30px;
-                font-size: 14px;
-            }
         }
     </style>
 </head>
 <body>
-    <canvas id="particle-canvas"></canvas>
+    <canvas id="bg-canvas"></canvas>
+    <canvas id="stars-canvas"></canvas>
+    <canvas id="bg-fireworks-canvas"></canvas>
     <canvas id="fireworks-canvas"></canvas>
-    <div class="light-burst" id="light-burst"></div>
-
-    <div class="container">
-        <div class="calendar-wrapper" id="calendar-wrapper">
-            <div class="calendar-rings">
-                <div class="ring"></div>
-                <div class="ring"></div>
-                <div class="ring"></div>
-                <div class="ring"></div>
-                <div class="ring"></div>
-            </div>
-            <div class="calendar-binding"></div>
-            <div class="calendar" id="calendar">
-                <div class="calendar-page page-front" id="current-page">
-                    <div class="year-display" id="year-display">2000</div>
-                </div>
-                <div class="stacked-pages">
-                    <div class="stacked-page"></div>
-                    <div class="stacked-page"></div>
-                    <div class="stacked-page"></div>
-                </div>
-            </div>
-        </div>
-
-        <button class="next-button" id="next-button">
-            🎆 Watch the fireworks — a message for you!
-        </button>
-    </div>
 
     <script>
-        // Particle Background
-        const particleCanvas = document.getElementById('particle-canvas');
-        const pCtx = particleCanvas.getContext('2d');
-        let particles = [];
+        // ==================== CONFIGURATION ====================
+        const CONFIG = {
+            // Messages to display
+            messages: [
+                "Hi Shana",
+                "Happy New Year!",
+                "I know that things didn't end how we wanted them to",
+                "But I still wish you nothing but the best year ahead",
+                "And nothing but good things for you",
+                "I genuinely hope that this year treats you kindly",
+                "And gives you peace, growth, and happiness",
+                "As the year ends",
+                "I just want to thank you for being everything",
+                "Thank you for the memories we shared",
+                "And for all the moments we were able to make together",
+                "Those memories will always mean so much to me",
+                "You made my life filled with happiness and love",
+                "That I will forever cherish and be thankful for",
+                "I also want to thank you for the memories we had",
+                "And even for the memories we were hoping to make this year",
+                "I just want you to know that you are the number one and most special person in my heart and in my life",
+                "And that will never change",
+                "No matter what happens or where life takes us",
+                "You'll always have a special place with me",
+                "Don't be a stranger, ha",
+                "I'd still love to know how you're doing",
+                "And see you doing well in life",
+                "I want you to know that I'll always love you",
+                "And that you're truly the sweetest person I've ever met",
+                "You deserve every good thing coming your way",
+                "I'll keep you in my prayers, always",
+                "I love you forever and ever",
+                "I hope you know I'll always support you",
+                "No matter where you are in life",
+                "I will never forget our memories",
+                "And the time we spent together",
+                "I hope you achieve your goals",
+                "And continue doing what makes you happy",
+                "Good luck sa journey mo in this new season of your life",
+                "Again, Happy New Year",
+                "Always wishing you the best"
+            ],
 
-        function resizeParticleCanvas() {
-            particleCanvas.width = window.innerWidth;
-            particleCanvas.height = window.innerHeight;
+            // Stars configuration
+            stars: {
+                count: 100,
+                minSize: 0.3,
+                maxSize: 1.5,
+                twinkleSpeed: { min: 0.005, max: 0.02 },
+                coloredStarChance: 0.15
+            },
+
+            // Background fireworks configuration
+            bgFireworks: {
+                spawnChance: 0.01,
+                rocketSpeed: { min: 1, max: 2 },
+                particleCount: 35,
+                particleSpeed: { min: 0.5, max: 2.5 },
+                particleSize: { min: 1, max: 2.5 },
+                particleDecay: { min: 0.008, max: 0.015 },
+                trailLength: 15
+            },
+
+            // Main text fireworks configuration
+            mainFireworks: {
+                rocketSpeed: 3,
+                rocketTrailLength: 20,
+                particleSize: 1.8,
+                particleSpacing: 3,
+                explosionSpeed: { min: 5, max: 10 },
+                explosionDuration: { min: 55, max: 75 },
+                formingSpeed: 0.08,
+                holdDuration: 100,
+                fadeSpeed: 0.012,
+                fallSpeed: 0.3,
+                fallAcceleration: 0.02,
+                fallDrift: 0.4,
+                maxRockets: 3,
+                particlesPerRocket: 300
+            },
+
+            // Text configuration
+            text: {
+                maxFontSize: 38,
+                fontSizeRatio: 12,
+                maxWidthRatio: 0.9,
+                lineHeightRatio: 1.4
+            },
+
+            // Color configuration
+            colors: {
+                hueSpeed: { min: 2, max: 4 },
+                saturation: 100,
+                lightness: 80,
+                particleAlpha: 1
+            },
+
+            // Delay & Timing configuration (in milliseconds)
+            delays: {
+                startDelay: 1000,
+                rocketLaunchInterval: 80,
+                nextMessageDelay: 200,
+                triggerNextAfterHoldFrames: 60,
+                formSoundDelay: 0
+            },
+
+            // Audio configuration
+            audio: {
+                enabled: true,
+                synthVolume: -18,
+                bassVolume: -12,
+                noiseVolume: -22,
+                bgNoiseVolume: -38,
+                padVolume: -26,
+                chordInterval: 6000
+            }
+        };
+
+        // ==================== CANVAS SETUP ====================
+        const bgCanvas = document.getElementById('bg-canvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        const starsCanvas = document.getElementById('stars-canvas');
+        const starsCtx = starsCanvas.getContext('2d');
+        const bgFireworksCanvas = document.getElementById('bg-fireworks-canvas');
+        const bfCtx = bgFireworksCanvas.getContext('2d');
+        const fireworksCanvas = document.getElementById('fireworks-canvas');
+        const fCtx = fireworksCanvas.getContext('2d');
+
+        function resizeCanvases() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            bgCanvas.width = w;
+            bgCanvas.height = h;
+            starsCanvas.width = w;
+            starsCanvas.height = h;
+            bgFireworksCanvas.width = w;
+            bgFireworksCanvas.height = h;
+            fireworksCanvas.width = w;
+            fireworksCanvas.height = h;
+            drawBackground();
         }
 
-        resizeParticleCanvas();
-        window.addEventListener('resize', resizeParticleCanvas);
+        resizeCanvases();
+        window.addEventListener('resize', resizeCanvases);
 
-        class Particle {
+        function drawBackground() {
+            const gradient = bgCtx.createRadialGradient(
+                bgCanvas.width / 2, bgCanvas.height, 0,
+                bgCanvas.width / 2, bgCanvas.height / 2, bgCanvas.height
+            );
+            gradient.addColorStop(0, '#0d1f3c');
+            gradient.addColorStop(0.5, '#061224');
+            gradient.addColorStop(1, '#000000');
+            bgCtx.fillStyle = gradient;
+            bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+        }
+
+        drawBackground();
+
+        // ==================== STARS ====================
+        class Star {
             constructor() {
                 this.reset();
             }
 
             reset() {
-                this.x = Math.random() * particleCanvas.width;
-                this.y = Math.random() * particleCanvas.height;
-                this.size = Math.random() * 1.5 + 0.5;
-                this.speedY = Math.random() * 0.2 + 0.05;
-                this.opacity = Math.random() * 0.4 + 0.1;
-                this.twinkleSpeed = Math.random() * 0.02 + 0.01;
-                this.twinkleDir = 1;
-                this.hue = Math.random() > 0.5 ? Math.random() * 40 + 200 : Math.random() * 40 + 35;
+                const cfg = CONFIG.stars;
+                this.x = Math.random() * starsCanvas.width;
+                this.y = Math.random() * starsCanvas.height;
+                this.size = Math.random() * (cfg.maxSize - cfg.minSize) + cfg.minSize;
+                this.twinkleSpeed = Math.random() * (cfg.twinkleSpeed.max - cfg.twinkleSpeed.min) + cfg.twinkleSpeed.min;
+                this.opacity = Math.random();
+                this.twinkleDir = Math.random() > 0.5 ? 1 : -1;
+                this.isColored = Math.random() < cfg.coloredStarChance;
+                this.hue = Math.random() * 60 + 200;
             }
 
             update() {
-                this.y -= this.speedY;
                 this.opacity += this.twinkleSpeed * this.twinkleDir;
-                
-                if (this.opacity > 0.5 || this.opacity < 0.1) {
-                    this.twinkleDir *= -1;
-                }
-
-                if (this.y < 0) {
-                    this.y = particleCanvas.height;
-                    this.x = Math.random() * particleCanvas.width;
-                }
+                if (this.opacity >= 1) { this.opacity = 1; this.twinkleDir = -1; }
+                if (this.opacity <= 0.2) { this.opacity = 0.2; this.twinkleDir = 1; }
             }
 
             draw() {
-                pCtx.beginPath();
-                pCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                pCtx.fillStyle = `hsla(${this.hue}, 70%, 70%, ${this.opacity})`;
-                pCtx.fill();
+                starsCtx.beginPath();
+                starsCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                if (this.isColored) {
+                    starsCtx.fillStyle = `hsla(${this.hue}, 60%, 80%, ${this.opacity})`;
+                } else {
+                    starsCtx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                }
+                starsCtx.fill();
             }
         }
 
-        for (let i = 0; i < 80; i++) {
-            particles.push(new Particle());
+        const stars = [];
+        for (let i = 0; i < CONFIG.stars.count; i++) stars.push(new Star());
+
+        function animateStars() {
+            starsCtx.clearRect(0, 0, starsCanvas.width, starsCanvas.height);
+            stars.forEach(s => { s.update(); s.draw(); });
+            requestAnimationFrame(animateStars);
         }
 
-        function animateParticles() {
-            pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
-            requestAnimationFrame(animateParticles);
-        }
-
-        animateParticles();
-
-        // Realistic Fireworks
-        const fireworksCanvas = document.getElementById('fireworks-canvas');
-        const fCtx = fireworksCanvas.getContext('2d');
-        let fireworksActive = false;
-        let rockets = [];
-        let sparks = [];
-
-        function resizeFireworksCanvas() {
-            fireworksCanvas.width = window.innerWidth;
-            fireworksCanvas.height = window.innerHeight;
-        }
-
-        resizeFireworksCanvas();
-        window.addEventListener('resize', resizeFireworksCanvas);
-
-        class Rocket {
+        // ==================== BACKGROUND FIREWORKS ====================
+        class BgRocket {
             constructor() {
-                this.x = Math.random() * fireworksCanvas.width * 0.6 + fireworksCanvas.width * 0.2;
-                this.y = fireworksCanvas.height;
-                this.targetY = Math.random() * fireworksCanvas.height * 0.3 + fireworksCanvas.height * 0.1;
-                this.speed = Math.random() * 3 + 8;
-                this.angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.2;
-                this.vx = Math.cos(this.angle) * this.speed;
-                this.vy = Math.sin(this.angle) * this.speed;
+                const cfg = CONFIG.bgFireworks;
+                this.x = Math.random() * bgFireworksCanvas.width;
+                this.y = bgFireworksCanvas.height + 5;
+                this.targetY = Math.random() * bgFireworksCanvas.height * 0.4 + bgFireworksCanvas.height * 0.1;
+                this.speed = Math.random() * (cfg.rocketSpeed.max - cfg.rocketSpeed.min) + cfg.rocketSpeed.min;
                 this.trail = [];
                 this.exploded = false;
                 this.hue = Math.random() * 360;
-                this.size = 3;
+                this.particlesCreated = false;
             }
 
             update() {
                 if (this.exploded) return;
-
-                this.trail.push({ x: this.x, y: this.y, alpha: 1 });
-                if (this.trail.length > 15) this.trail.shift();
-
-                this.x += this.vx;
-                this.y += this.vy;
-                this.vy += 0.15;
-
-                // Update trail alpha
-                this.trail.forEach((t, i) => {
-                    t.alpha = (i / this.trail.length) * 0.8;
-                });
-
-                if (this.vy >= 0 || this.y <= this.targetY) {
-                    this.explode();
-                }
-            }
-
-            explode() {
-                this.exploded = true;
-                
-                const sparkCount = 150 + Math.random() * 100;
-                const type = Math.floor(Math.random() * 4);
-
-                for (let i = 0; i < sparkCount; i++) {
-                    let spark;
-                    
-                    if (type === 0) {
-                        // Spherical burst
-                        const angle = Math.random() * Math.PI * 2;
-                        const phi = Math.acos(2 * Math.random() - 1);
-                        const speed = Math.random() * 6 + 3;
-                        spark = new Spark(
-                            this.x, this.y,
-                            Math.sin(phi) * Math.cos(angle) * speed,
-                            Math.sin(phi) * Math.sin(angle) * speed - 2,
-                            this.hue
-                        );
-                    } else if (type === 1) {
-                        // Willow
-                        const angle = Math.random() * Math.PI * 2;
-                        const speed = Math.random() * 4 + 2;
-                        spark = new Spark(
-                            this.x, this.y,
-                            Math.cos(angle) * speed,
-                            Math.sin(angle) * speed,
-                            this.hue,
-                            0.015,
-                            true
-                        );
-                    } else if (type === 2) {
-                        // Chrysanthemum
-                        const angle = (i / sparkCount) * Math.PI * 2;
-                        const speed = Math.random() * 2 + 5;
-                        spark = new Spark(
-                            this.x, this.y,
-                            Math.cos(angle) * speed,
-                            Math.sin(angle) * speed - 1,
-                            this.hue + (Math.random() - 0.5) * 30
-                        );
-                    } else {
-                        // Multi-color burst
-                        const angle = Math.random() * Math.PI * 2;
-                        const speed = Math.random() * 5 + 3;
-                        spark = new Spark(
-                            this.x, this.y,
-                            Math.cos(angle) * speed,
-                            Math.sin(angle) * speed - 1,
-                            Math.random() * 360
-                        );
-                    }
-                    
-                    sparks.push(spark);
-                }
-
-                // Add crackle sparks
-                for (let i = 0; i < 20; i++) {
-                    setTimeout(() => {
-                        if (!fireworksActive) return;
-                        const angle = Math.random() * Math.PI * 2;
-                        const dist = Math.random() * 50;
-                        const sx = this.x + Math.cos(angle) * dist;
-                        const sy = this.y + Math.sin(angle) * dist;
-                        sparks.push(new Spark(sx, sy, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 2, 60, 0.05));
-                    }, Math.random() * 500);
-                }
+                this.trail.push({ x: this.x, y: this.y });
+                if (this.trail.length > CONFIG.bgFireworks.trailLength) this.trail.shift();
+                this.y -= this.speed;
+                if (this.y <= this.targetY) this.exploded = true;
             }
 
             draw() {
                 if (this.exploded) return;
-
-                // Draw trail
                 this.trail.forEach((t, i) => {
-                    const size = (i / this.trail.length) * this.size;
-                    fCtx.beginPath();
-                    fCtx.arc(t.x, t.y, size, 0, Math.PI * 2);
-                    fCtx.fillStyle = `rgba(255, 200, 100, ${t.alpha})`;
-                    fCtx.fill();
+                    const alpha = (i / this.trail.length) * 0.3;
+                    bfCtx.beginPath();
+                    bfCtx.arc(t.x, t.y, 1.2, 0, Math.PI * 2);
+                    bfCtx.fillStyle = `rgba(255, 220, 150, ${alpha})`;
+                    bfCtx.fill();
                 });
-
-                // Draw rocket head
-                fCtx.beginPath();
-                fCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                fCtx.fillStyle = '#fff';
-                fCtx.shadowBlur = 15;
-                fCtx.shadowColor = '#ff9500';
-                fCtx.fill();
-                fCtx.shadowBlur = 0;
+                bfCtx.beginPath();
+                bfCtx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+                bfCtx.fillStyle = '#fff';
+                bfCtx.fill();
             }
         }
 
-        class Spark {
-            constructor(x, y, vx, vy, hue, decay = 0.02, isWillow = false) {
+        class BgParticle {
+            constructor(x, y, hue) {
+                const cfg = CONFIG.bgFireworks;
                 this.x = x;
                 this.y = y;
-                this.vx = vx;
-                this.vy = vy;
-                this.hue = hue;
-                this.alpha = 1;
-                this.decay = decay + Math.random() * 0.01;
-                this.size = Math.random() * 2 + 1;
-                this.isWillow = isWillow;
-                this.trail = [];
-                this.gravity = isWillow ? 0.08 : 0.05;
-                this.friction = isWillow ? 0.98 : 0.985;
+                this.hue = hue + (Math.random() - 0.5) * 40;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * (cfg.particleSpeed.max - cfg.particleSpeed.min) + cfg.particleSpeed.min;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.alpha = 0.9;
+                this.decay = Math.random() * (cfg.particleDecay.max - cfg.particleDecay.min) + cfg.particleDecay.min;
+                this.size = Math.random() * (cfg.particleSize.max - cfg.particleSize.min) + cfg.particleSize.min;
             }
 
             update() {
-                this.trail.push({ x: this.x, y: this.y, alpha: this.alpha });
-                if (this.trail.length > (this.isWillow ? 20 : 8)) this.trail.shift();
-
                 this.x += this.vx;
                 this.y += this.vy;
-                this.vy += this.gravity;
-                this.vx *= this.friction;
-                this.vy *= this.friction;
+                this.vy += 0.02;
+                this.vx *= 0.98;
+                this.vy *= 0.98;
                 this.alpha -= this.decay;
             }
 
             draw() {
-                // Draw trail
-                if (this.trail.length > 1) {
-                    fCtx.beginPath();
-                    fCtx.moveTo(this.trail[0].x, this.trail[0].y);
-                    for (let i = 1; i < this.trail.length; i++) {
-                        fCtx.lineTo(this.trail[i].x, this.trail[i].y);
-                    }
-                    fCtx.strokeStyle = `hsla(${this.hue}, 100%, 70%, ${this.alpha * 0.3})`;
-                    fCtx.lineWidth = this.size * 0.5;
-                    fCtx.stroke();
-                }
-
-                // Draw spark
-                const lightness = 50 + this.alpha * 30;
-                fCtx.beginPath();
-                fCtx.arc(this.x, this.y, this.size * this.alpha, 0, Math.PI * 2);
-                fCtx.fillStyle = `hsla(${this.hue}, 100%, ${lightness}%, ${this.alpha})`;
-                fCtx.fill();
-
-                // Glow effect
-                if (this.alpha > 0.5) {
-                    fCtx.beginPath();
-                    fCtx.arc(this.x, this.y, this.size * 2 * this.alpha, 0, Math.PI * 2);
-                    fCtx.fillStyle = `hsla(${this.hue}, 100%, 70%, ${this.alpha * 0.2})`;
-                    fCtx.fill();
-                }
+                if (this.alpha <= 0) return;
+                bfCtx.beginPath();
+                bfCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                bfCtx.fillStyle = `hsla(${this.hue}, 100%, 70%, ${this.alpha * 0.6})`;
+                bfCtx.fill();
             }
         }
 
-        function animateFireworks() {
-            if (!fireworksActive) return;
+        let bgRockets = [];
+        let bgParticles = [];
 
-            fCtx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-            fCtx.fillRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+        function animateBgFireworks() {
+            bfCtx.clearRect(0, 0, bgFireworksCanvas.width, bgFireworksCanvas.height);
 
-            // Launch new rockets
-            if (Math.random() < 0.15) {
-                rockets.push(new Rocket());
+            if (Math.random() < CONFIG.bgFireworks.spawnChance) {
+                bgRockets.push(new BgRocket());
             }
 
-            // Update and draw rockets
-            rockets = rockets.filter(r => !r.exploded);
-            rockets.forEach(r => {
+            bgRockets.forEach(r => {
                 r.update();
                 r.draw();
+                if (r.exploded && !r.particlesCreated) {
+                    r.particlesCreated = true;
+                    for (let i = 0; i < CONFIG.bgFireworks.particleCount; i++) {
+                        bgParticles.push(new BgParticle(r.x, r.y, r.hue));
+                    }
+                    playBgExplosion();
+                }
             });
+            bgRockets = bgRockets.filter(r => !r.exploded);
 
-            // Update and draw sparks
-            sparks = sparks.filter(s => s.alpha > 0);
-            sparks.forEach(s => {
-                s.update();
-                s.draw();
-            });
+            bgParticles.forEach(p => { p.update(); p.draw(); });
+            bgParticles = bgParticles.filter(p => p.alpha > 0);
 
-            requestAnimationFrame(animateFireworks);
+            requestAnimationFrame(animateBgFireworks);
         }
 
-        // Sound Effects
+        // ==================== MAIN TEXT FIREWORKS ====================
+        class Particle {
+            constructor(x, y, targetX, targetY, messageId) {
+                const cfg = CONFIG.mainFireworks;
+                const colorCfg = CONFIG.colors;
+                
+                this.x = x;
+                this.y = y;
+                this.targetX = targetX;
+                this.targetY = targetY;
+                this.size = cfg.particleSize;
+                this.alpha = colorCfg.particleAlpha;
+                this.messageId = messageId;
+                
+                this.hueOffset = Math.random() * 360;
+                this.hueSpeed = Math.random() * (colorCfg.hueSpeed.max - colorCfg.hueSpeed.min) + colorCfg.hueSpeed.min;
+                
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * (cfg.explosionSpeed.max - cfg.explosionSpeed.min) + cfg.explosionSpeed.min;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                
+                this.phase = 'explode';
+                this.explodeTime = 0;
+                this.maxExplodeTime = Math.random() * (cfg.explosionDuration.max - cfg.explosionDuration.min) + cfg.explosionDuration.min;
+                this.holdTime = 0;
+                this.maxHoldTime = cfg.holdDuration;
+                this.friction = 0.97;
+                this.isFinal = false;
+                
+                this.fallSpeedY = 0;
+                this.fallSpeedX = (Math.random() - 0.5) * 0.5;
+            }
+
+            triggerFade() {
+                if (this.phase === 'hold') {
+                    this.phase = 'fade';
+                    this.fallSpeedY = 0;
+                }
+            }
+
+            update() {
+                const cfg = CONFIG.mainFireworks;
+                
+                this.hueOffset += this.hueSpeed;
+                if (this.hueOffset > 360) this.hueOffset -= 360;
+                
+                if (this.phase === 'explode') {
+                    this.vx *= this.friction;
+                    this.vy *= this.friction;
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.explodeTime++;
+                    
+                    if (this.explodeTime >= this.maxExplodeTime) {
+                        this.phase = 'form';
+                    }
+                } else if (this.phase === 'form') {
+                    const dx = this.targetX - this.x;
+                    const dy = this.targetY - this.y;
+                    this.x += dx * cfg.formingSpeed;
+                    this.y += dy * cfg.formingSpeed;
+                    
+                    if (Math.abs(dx) < 0.8 && Math.abs(dy) < 0.8) {
+                        this.x = this.targetX;
+                        this.y = this.targetY;
+                        this.phase = 'hold';
+                        this.holdTime = 0;
+                    }
+                } else if (this.phase === 'hold') {
+                    this.x = this.targetX + (Math.random() - 0.5) * 0.3;
+                    this.y = this.targetY + (Math.random() - 0.5) * 0.3;
+                    this.holdTime++;
+                    
+                    if (!this.isFinal && this.holdTime >= this.maxHoldTime) {
+                        this.phase = 'fade';
+                        this.fallSpeedY = 0;
+                    }
+                } else if (this.phase === 'fade') {
+                    this.fallSpeedY += cfg.fallAcceleration;
+                    this.y += cfg.fallSpeed + this.fallSpeedY;
+                    this.x += this.fallSpeedX + (Math.random() - 0.5) * cfg.fallDrift;
+                    this.alpha -= cfg.fadeSpeed;
+                    
+                    this.size = cfg.particleSize * (0.5 + Math.random() * 0.5);
+                }
+            }
+
+            draw() {
+                if (this.alpha <= 0) return;
+                const colorCfg = CONFIG.colors;
+                const hue = this.hueOffset % 360;
+                
+                fCtx.beginPath();
+                fCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                fCtx.fillStyle = `hsla(${hue}, ${colorCfg.saturation}%, ${colorCfg.lightness}%, ${this.alpha})`;
+                fCtx.fill();
+            }
+        }
+
+        class Rocket {
+            constructor(targetX, targetY) {
+                const cfg = CONFIG.mainFireworks;
+                
+                this.x = fireworksCanvas.width / 2 + (Math.random() - 0.5) * 120;
+                this.y = fireworksCanvas.height + 10;
+                this.targetX = targetX;
+                this.targetY = targetY;
+                this.speed = cfg.rocketSpeed;
+                this.trail = [];
+                this.exploded = false;
+                this.particlesCreated = false;
+                
+                const dx = this.targetX - this.x;
+                const dy = this.targetY - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                this.vx = (dx / dist) * this.speed;
+                this.vy = (dy / dist) * this.speed;
+            }
+
+            update() {
+                if (this.exploded) return;
+                this.trail.push({ x: this.x, y: this.y });
+                if (this.trail.length > CONFIG.mainFireworks.rocketTrailLength) this.trail.shift();
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                const dx = this.targetX - this.x;
+                const dy = this.targetY - this.y;
+                if (Math.sqrt(dx * dx + dy * dy) < 10) {
+                    this.exploded = true;
+                }
+            }
+
+            draw() {
+                if (this.exploded) return;
+                this.trail.forEach((t, i) => {
+                    const alpha = (i / this.trail.length) * 0.5;
+                    fCtx.beginPath();
+                    fCtx.arc(t.x, t.y, 1, 0, Math.PI * 2);
+                    fCtx.fillStyle = `rgba(255, 240, 200, ${alpha})`;
+                    fCtx.fill();
+                });
+                fCtx.beginPath();
+                fCtx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+                fCtx.fillStyle = '#fff';
+                fCtx.fill();
+            }
+        }
+
+        let particles = [];
+        let rockets = [];
+        let currentMessageIndex = 0;
+        let currentMessageId = 0;
+        let isShowingMessage = false;
+        let canLaunchNext = true;
+        let holdFrameCount = 0;
+        let formSoundPlayed = false;
+
+        // ==================== TEXT HELPERS ====================
+        function wrapText(ctx, text, maxWidth) {
+            const words = text.split(' ');
+            const lines = [];
+            let currentLine = '';
+
+            words.forEach(word => {
+                const testLine = currentLine ? currentLine + ' ' + word : word;
+                const metrics = ctx.measureText(testLine);
+                
+                if (metrics.width > maxWidth && currentLine) {
+                    lines.push(currentLine);
+                    currentLine = word;
+                } else {
+                    currentLine = testLine;
+                }
+            });
+            
+            if (currentLine) lines.push(currentLine);
+            return lines;
+        }
+
+        function getTextParticles(text, centerX, centerY) {
+            const cfg = CONFIG.text;
+            const mainCfg = CONFIG.mainFireworks;
+            
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            const maxWidth = fireworksCanvas.width * cfg.maxWidthRatio;
+            let fontSize = Math.min(cfg.maxFontSize, fireworksCanvas.width / cfg.fontSizeRatio);
+            
+            tempCtx.font = `bold ${fontSize}px Arial`;
+            const lines = wrapText(tempCtx, text, maxWidth);
+            
+            const lineHeight = fontSize * cfg.lineHeightRatio;
+            const totalHeight = lines.length * lineHeight;
+            
+            let maxLineWidth = 0;
+            lines.forEach(line => {
+                const w = tempCtx.measureText(line).width;
+                if (w > maxLineWidth) maxLineWidth = w;
+            });
+            
+            tempCanvas.width = Math.max(maxLineWidth + 30, 100);
+            tempCanvas.height = Math.max(totalHeight + 30, 50);
+            
+            tempCtx.font = `bold ${fontSize}px Arial`;
+            tempCtx.fillStyle = '#fff';
+            tempCtx.textAlign = 'center';
+            tempCtx.textBaseline = 'middle';
+            
+            lines.forEach((line, i) => {
+                const y = (i + 0.5) * lineHeight + 15;
+                tempCtx.fillText(line, tempCanvas.width / 2, y);
+            });
+            
+            const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+            const positions = [];
+            const spacing = mainCfg.particleSpacing;
+            
+            for (let y = 0; y < tempCanvas.height; y += spacing) {
+                for (let x = 0; x < tempCanvas.width; x += spacing) {
+                    const i = (y * tempCanvas.width + x) * 4;
+                    if (imageData.data[i + 3] > 128) {
+                        positions.push({
+                            x: x - tempCanvas.width / 2 + centerX,
+                            y: y - tempCanvas.height / 2 + centerY
+                        });
+                    }
+                }
+            }
+            
+            return positions;
+        }
+
+        function triggerCurrentMessageFade() {
+            particles.forEach(p => {
+                if (p.messageId === currentMessageId && !p.isFinal) {
+                    p.triggerFade();
+                }
+            });
+        }
+
+        function launchFireworks(text, isFinal) {
+            const cfg = CONFIG.mainFireworks;
+            const delayCfg = CONFIG.delays;
+            
+            const centerX = fireworksCanvas.width / 2;
+            const centerY = fireworksCanvas.height / 2;
+            
+            const textPositions = getTextParticles(text, centerX, centerY);
+            
+            if (textPositions.length === 0) {
+                console.log('No positions found for:', text);
+                // Skip to next message
+                setTimeout(() => {
+                    proceedToNextMessage();
+                }, 500);
+                return;
+            }
+            
+            currentMessageId++;
+            const messageId = currentMessageId;
+            
+            const rocketCount = Math.min(cfg.maxRockets, Math.max(1, Math.ceil(textPositions.length / cfg.particlesPerRocket)));
+            
+            const rocketTargets = [];
+            for (let i = 0; i < rocketCount; i++) {
+                const offsetX = (i - (rocketCount - 1) / 2) * 50;
+                rocketTargets.push({ x: centerX + offsetX, y: centerY });
+            }
+            
+            const particlesPerRocket = Math.ceil(textPositions.length / rocketCount);
+            
+            isShowingMessage = true;
+            canLaunchNext = false;
+            holdFrameCount = 0;
+            formSoundPlayed = false;
+            
+            rocketTargets.forEach((target, idx) => {
+                setTimeout(() => {
+                    playLaunchSound();
+                    const rocket = new Rocket(target.x, target.y);
+                    rocket.particleStart = idx * particlesPerRocket;
+                    rocket.particleEnd = Math.min((idx + 1) * particlesPerRocket, textPositions.length);
+                    rocket.textPositions = textPositions;
+                    rocket.isFinal = isFinal;
+                    rocket.messageId = messageId;
+                    rockets.push(rocket);
+                }, idx * delayCfg.rocketLaunchInterval);
+            });
+        }
+
+        function createParticles(rocket) {
+            playExplosionSound();
+            
+            for (let i = rocket.particleStart; i < rocket.particleEnd; i++) {
+                const pos = rocket.textPositions[i];
+                const p = new Particle(rocket.x, rocket.y, pos.x, pos.y, rocket.messageId);
+                p.isFinal = rocket.isFinal;
+                particles.push(p);
+            }
+        }
+
+        function proceedToNextMessage() {
+            currentMessageIndex++;
+            if (currentMessageIndex < CONFIG.messages.length) {
+                const isFinal = currentMessageIndex === CONFIG.messages.length - 1;
+                
+                triggerCurrentMessageFade();
+                
+                setTimeout(() => {
+                    formSoundPlayed = false;
+                    launchFireworks(CONFIG.messages[currentMessageIndex], isFinal);
+                }, CONFIG.delays.nextMessageDelay);
+            }
+        }
+
+        // ==================== AUDIO ====================
         let audioStarted = false;
-        let synth, celebrationSynth, noiseSynth;
+        let synth, bassSynth, noiseSynth, padSynth, bgNoiseSynth;
 
         async function initAudio() {
-            if (audioStarted) return;
+            if (audioStarted || !CONFIG.audio.enabled) return;
+            
+            const cfg = CONFIG.audio;
+            
             try {
                 await Tone.start();
                 audioStarted = true;
 
-                synth = new Tone.Synth({
-                    oscillator: { type: 'triangle' },
-                    envelope: { attack: 0.005, decay: 0.1, sustain: 0.05, release: 0.15 }
-                }).toDestination();
-                synth.volume.value = -18;
-
-                celebrationSynth = new Tone.PolySynth(Tone.Synth, {
+                synth = new Tone.PolySynth(Tone.Synth, {
                     oscillator: { type: 'sine' },
-                    envelope: { attack: 0.02, decay: 0.2, sustain: 0.1, release: 0.4 }
+                    envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.4 }
                 }).toDestination();
-                celebrationSynth.volume.value = -12;
+                synth.volume.value = cfg.synthVolume;
+
+                bassSynth = new Tone.MembraneSynth({
+                    pitchDecay: 0.05,
+                    octaves: 3,
+                    envelope: { attack: 0.001, decay: 0.3, sustain: 0.01, release: 0.3 }
+                }).toDestination();
+                bassSynth.volume.value = cfg.bassVolume;
 
                 noiseSynth = new Tone.NoiseSynth({
-                    noise: { type: 'white' },
-                    envelope: { attack: 0.005, decay: 0.08, sustain: 0 }
+                    noise: { type: 'pink' },
+                    envelope: { attack: 0.005, decay: 0.15, sustain: 0 }
                 }).toDestination();
-                noiseSynth.volume.value = -25;
+                noiseSynth.volume.value = cfg.noiseVolume;
+
+                bgNoiseSynth = new Tone.NoiseSynth({
+                    noise: { type: 'white' },
+                    envelope: { attack: 0.005, decay: 0.06, sustain: 0 }
+                }).toDestination();
+                bgNoiseSynth.volume.value = cfg.bgNoiseVolume;
+
+                const reverb = new Tone.Reverb({ decay: 6, wet: 0.5 }).toDestination();
+                padSynth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: 'sine' },
+                    envelope: { attack: 3, decay: 1, sustain: 0.5, release: 4 }
+                }).connect(reverb);
+                padSynth.volume.value = cfg.padVolume;
+
+                const chords = [
+                    ['C3', 'E3', 'G3', 'B3'],
+                    ['A2', 'C3', 'E3', 'G3'],
+                    ['F2', 'A2', 'C3', 'E3'],
+                    ['G2', 'B2', 'D3', 'F3']
+                ];
+                let chordIdx = 0;
+
+                const playChord = () => {
+                    if (!audioStarted) return;
+                    padSynth.triggerAttackRelease(chords[chordIdx], '1n');
+                    chordIdx = (chordIdx + 1) % chords.length;
+                };
+
+                playChord();
+                setInterval(playChord, cfg.chordInterval);
 
             } catch (e) {
-                console.log('Audio init failed:', e);
+                console.log('Audio failed:', e);
             }
         }
 
-        function playPageFlip() {
-            if (synth && audioStarted) {
-                try {
-                    const notes = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'];
-                    const idx = Math.min(Math.floor((currentYearIndex / years.length) * notes.length), notes.length - 1);
-                    synth.triggerAttackRelease(notes[idx], '32n');
-                    if (noiseSynth) noiseSynth.triggerAttackRelease('32n');
-                } catch (e) {}
+        function playLaunchSound() {
+            if (!audioStarted || !CONFIG.audio.enabled) return;
+            try {
+                synth.triggerAttackRelease('C2', '16n');
+                noiseSynth.triggerAttackRelease('32n');
+            } catch (e) {}
+        }
+
+        function playExplosionSound() {
+            if (!audioStarted || !CONFIG.audio.enabled) return;
+            try {
+                const chords = [['C5', 'E5', 'G5'], ['D5', 'F5', 'A5'], ['E5', 'G5', 'B5']];
+                synth.triggerAttackRelease(chords[Math.floor(Math.random() * chords.length)], '8n');
+                bassSynth.triggerAttackRelease('C2', '8n');
+                noiseSynth.triggerAttackRelease('8n');
+            } catch (e) {}
+        }
+
+        function playBgExplosion() {
+            if (!audioStarted || !CONFIG.audio.enabled) return;
+            try {
+                bgNoiseSynth.triggerAttackRelease('16n');
+            } catch (e) {}
+        }
+
+        function playFormSound() {
+            if (!audioStarted || !CONFIG.audio.enabled) return;
+            try {
+                synth.triggerAttackRelease(['E4', 'G4', 'B4'], '4n');
+            } catch (e) {}
+        }
+
+        // ==================== ANIMATION LOOP ====================
+        function checkAllFormed() {
+            const currentParticles = particles.filter(p => p.messageId === currentMessageId);
+            if (currentParticles.length === 0) return false;
+            return currentParticles.every(p => p.phase === 'hold' || p.phase === 'fade');
+        }
+
+        function checkAllHolding() {
+            const currentParticles = particles.filter(p => p.messageId === currentMessageId);
+            if (currentParticles.length === 0) return false;
+            return currentParticles.every(p => p.phase === 'hold');
+        }
+
+        function animate() {
+            fCtx.clearRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+
+            // Update rockets
+            rockets.forEach(rocket => {
+                rocket.update();
+                rocket.draw();
+                
+                if (rocket.exploded && !rocket.particlesCreated) {
+                    rocket.particlesCreated = true;
+                    createParticles(rocket);
+                }
+            });
+            rockets = rockets.filter(r => !r.exploded);
+
+            // Update particles
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            // Play form sound when all particles are formed
+            if (!formSoundPlayed && checkAllFormed() && particles.length > 0) {
+                formSoundPlayed = true;
+                setTimeout(() => {
+                    playFormSound();
+                }, CONFIG.delays.formSoundDelay);
             }
-        }
 
-        function playSpecialYear() {
-            if (celebrationSynth && audioStarted) {
-                try {
-                    const now = Tone.now();
-                    celebrationSynth.triggerAttackRelease(['C4', 'E4', 'G4', 'C5'], '4n', now);
-                    celebrationSynth.triggerAttackRelease(['E4', 'G4', 'B4', 'E5'], '4n', now + 0.3);
-                    celebrationSynth.triggerAttackRelease(['G4', 'B4', 'D5', 'G5'], '2n', now + 0.6);
-                } catch (e) {}
+            // Count hold frames and trigger next message
+            if (isShowingMessage && !canLaunchNext && checkAllHolding()) {
+                holdFrameCount++;
+                
+                if (holdFrameCount >= CONFIG.delays.triggerNextAfterHoldFrames) {
+                    canLaunchNext = true;
+                    proceedToNextMessage();
+                }
             }
+
+            // Clean up dead particles (but keep final ones)
+            particles = particles.filter(p => p.alpha > 0 || p.isFinal);
+
+            requestAnimationFrame(animate);
         }
 
-        let fireworkSoundInterval;
-
-        function playFireworkSound() {
-            if (celebrationSynth && audioStarted) {
-                try {
-                    const chords = [
-                        ['C5', 'E5', 'G5'],
-                        ['D5', 'F#5', 'A5'],
-                        ['E5', 'G#5', 'B5'],
-                        ['F5', 'A5', 'C6'],
-                        ['G5', 'B5', 'D6']
-                    ];
-                    const chord = chords[Math.floor(Math.random() * chords.length)];
-                    celebrationSynth.triggerAttackRelease(chord, '16n');
-                    
-                    if (noiseSynth && Math.random() > 0.6) {
-                        noiseSynth.triggerAttackRelease('16n');
-                    }
-                } catch (e) {}
-            }
-        }
-
-        function startFireworkSounds() {
-            playFireworkSound();
-            fireworkSoundInterval = setInterval(playFireworkSound, 200);
-        }
-
-        function stopFireworkSounds() {
-            clearInterval(fireworkSoundInterval);
-        }
-
-        // Calendar Animation
-        const calendar = document.getElementById('calendar');
-        const yearDisplay = document.getElementById('year-display');
-        const nextButton = document.getElementById('next-button');
-        const lightBurst = document.getElementById('light-burst');
-
-        const years = [];
-        for (let y = 2000; y <= 2026; y++) {
-            years.push(y);
-        }
-
-        let currentYearIndex = 0;
-
-        function createFlippingPage(year) {
-            const flippingPage = document.createElement('div');
-            flippingPage.className = 'flipping-page';
-            
-            const front = document.createElement('div');
-            front.className = 'calendar-page page-front';
-            front.innerHTML = `<div class="year-display">${year}</div>`;
-            
-            const back = document.createElement('div');
-            back.className = 'calendar-page page-back';
-            
-            flippingPage.appendChild(front);
-            flippingPage.appendChild(back);
-            
-            return flippingPage;
-        }
-
-        async function flipToNextYear() {
-            if (currentYearIndex >= years.length - 1) return;
-            
-            const currentYear = years[currentYearIndex];
-            const nextYear = years[currentYearIndex + 1];
-            
-            const flippingPage = createFlippingPage(currentYear);
-            calendar.insertBefore(flippingPage, calendar.firstChild);
-            
-            playPageFlip();
-            
-            await new Promise(resolve => setTimeout(resolve, 30));
-            flippingPage.classList.add('flip-animation');
-            
-            setTimeout(() => {
-                yearDisplay.textContent = nextYear;
-            }, 250);
-            
-            await new Promise(resolve => setTimeout(resolve, 500));
-            flippingPage.remove();
-            
-            currentYearIndex++;
-            
-            if (currentYearIndex === years.length - 1) {
-                triggerSpecialEffect();
-            }
-        }
-
-        function triggerSpecialEffect() {
-            yearDisplay.classList.add('special');
-            lightBurst.classList.add('active');
-            playSpecialYear();
-            
-            setTimeout(() => {
-                nextButton.classList.add('visible');
-            }, 1200);
-        }
-
-        async function animateYears() {
-            await initAudio();
-            await new Promise(resolve => setTimeout(resolve, 800));
-            
-            for (let i = 0; i < years.length - 1; i++) {
-                await flipToNextYear();
-                const delay = 200 + (i / (years.length - 1)) * 150;
-                await new Promise(resolve => setTimeout(resolve, delay));
-            }
-        }
-
-        nextButton.addEventListener('click', async () => {
+        // ==================== START ====================
+        async function start() {
             await initAudio();
             
-            nextButton.style.pointerEvents = 'none';
-            nextButton.style.opacity = '0.5';
-            
-            // Start fireworks
-            fireworksCanvas.classList.add('active');
-            fireworksActive = true;
-            animateFireworks();
-            startFireworkSounds();
-            
-            // After 3 seconds, redirect
             setTimeout(() => {
-                stopFireworkSounds();
-                fireworksActive = false;
-                window.location.href = 'fireworksmessage.html';
-            }, 3000);
-        });
+                launchFireworks(CONFIG.messages[0], CONFIG.messages.length === 1);
+            }, CONFIG.delays.startDelay);
+        }
 
-        // Auto-start
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(animateYears, 500);
-        });
+        animateStars();
+        animateBgFireworks();
+        animate();
 
-        // Mobile audio init
+        document.addEventListener('DOMContentLoaded', start);
         document.body.addEventListener('touchstart', initAudio, { once: true });
         document.body.addEventListener('click', initAudio, { once: true });
     </script>
 </body>
 </html>
+
