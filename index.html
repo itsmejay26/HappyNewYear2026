@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -55,16 +55,6 @@
             height: 100%;
             z-index: 10;
         }
-
-        #progress {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: rgba(255,255,255,0.5);
-            font-size: 14px;
-            z-index: 100;
-        }
     </style>
 </head>
 <body>
@@ -72,50 +62,20 @@
     <canvas id="stars-canvas"></canvas>
     <canvas id="bg-fireworks-canvas"></canvas>
     <canvas id="fireworks-canvas"></canvas>
-    <div id="progress"></div>
 
     <script>
         // ==================== CONFIGURATION ====================
         const CONFIG = {
-            // Messages to display - ALL 37 MESSAGES
+            // Messages to display
             messages: [
-                "Hi Shana",
+                "Hi Shana,",
                 "Happy New Year!",
-                "I know that things didn't end how we wanted them to",
-                "But I still wish you nothing but the best year ahead",
-                "And nothing but good things for you",
-                "I genuinely hope that this year treats you kindly",
-                "And gives you peace, growth, and happiness",
-                "As the year ends",
-                "I just want to thank you for being everything",
-                "Thank you for the memories we shared",
-                "And for all the moments we were able to make together",
-                "Those memories will always mean so much to me",
-                "You made my life filled with happiness and love",
-                "That I will forever cherish and be thankful for",
-                "I also want to thank you for the memories we had",
-                "And even for the memories we were hoping to make this year",
-                "I just want you to know that you are the number one and most special person in my heart and in my life",
-                "And that will never change",
-                "No matter what happens or where life takes us",
-                "You'll always have a special place with me",
-                "Don't be a stranger, ha",
-                "I'd still love to know how you're doing",
-                "And see you doing well in life",
-                "I want you to know that I'll always love you",
-                "And that you're truly the sweetest person I've ever met",
-                "You deserve every good thing coming your way",
-                "I'll keep you in my prayers, always",
-                "I love you forever and ever",
-                "I hope you know I'll always support you",
-                "No matter where you are in life",
-                "I will never forget our memories",
-                "And the time we spent together",
-                "I hope you achieve your goals",
-                "And continue doing what makes you happy",
-                "Good luck sa journey mo in this new season of your life",
-                "Again, Happy New Year",
-                "Always wishing you the best"
+                "I know that things didn't end how we wanted them to,",
+                "But I still wish you nothing but the best year ahead,",
+                "And nothing but good things for you,",
+                "I genuinely hope that this year treats you kindly,",
+                "And gives you peace, growth, and happiness,",
+                "As the year ends,"
             ],
 
             // Stars configuration
@@ -140,29 +100,28 @@
 
             // Main text fireworks configuration
             mainFireworks: {
-                rocketSpeed: 4,
+                rocketSpeed: 3,
                 rocketTrailLength: 20,
-                particleSize: 2,
-                particleSpacing: 4,
+                particleSize: 1.8,
+                particleSpacing: 3,
                 explosionSpeed: { min: 5, max: 10 },
-                explosionDuration: { min: 45, max: 65 },
-                formingSpeed: 0.1,
-                holdDuration: 80,
-                fadeSpeed: 0.015,
+                explosionDuration: { min: 55, max: 75 },
+                formingSpeed: 0.08,
+                holdDuration: 100,
+                fadeSpeed: 0.012,
                 fallSpeed: 0.3,
-                fallAcceleration: 0.025,
+                fallAcceleration: 0.02,
                 fallDrift: 0.4,
-                maxRockets: 2,
-                particlesPerRocket: 250
+                maxRockets: 3,
+                particlesPerRocket: 300
             },
 
             // Text configuration
             text: {
-                maxFontSize: 32,
-                minFontSize: 18,
-                fontSizeRatio: 14,
-                maxWidthRatio: 0.92,
-                lineHeightRatio: 1.35
+                maxFontSize: 42,
+                fontSizeRatio: 10,
+                maxWidthRatio: 0.85,
+                lineHeightRatio: 1.4
             },
 
             // Color configuration
@@ -173,12 +132,12 @@
                 particleAlpha: 1
             },
 
-            // Delay & Timing configuration
+            // Delay & Timing configuration (in milliseconds)
             delays: {
                 startDelay: 1000,
-                rocketLaunchInterval: 60,
-                nextMessageDelay: 150,
-                triggerNextAfterHoldFrames: 50,
+                rocketLaunchInterval: 80,
+                nextMessageDelay: 200,
+                triggerNextAfterHoldFrames: 60,
                 formSoundDelay: 0
             },
 
@@ -191,10 +150,7 @@
                 bgNoiseVolume: -38,
                 padVolume: -26,
                 chordInterval: 6000
-            },
-
-            // Show progress indicator
-            showProgress: true
+            }
         };
 
         // ==================== CANVAS SETUP ====================
@@ -206,7 +162,6 @@
         const bfCtx = bgFireworksCanvas.getContext('2d');
         const fireworksCanvas = document.getElementById('fireworks-canvas');
         const fCtx = fireworksCanvas.getContext('2d');
-        const progressEl = document.getElementById('progress');
 
         function resizeCanvases() {
             const w = window.innerWidth;
@@ -238,12 +193,6 @@
         }
 
         drawBackground();
-
-        function updateProgress(current, total) {
-            if (CONFIG.showProgress) {
-                progressEl.textContent = `${current + 1} / ${total}`;
-            }
-        }
 
         // ==================== STARS ====================
         class Star {
@@ -425,7 +374,7 @@
             }
 
             triggerFade() {
-                if (this.phase === 'hold' || this.phase === 'form') {
+                if (this.phase === 'hold') {
                     this.phase = 'fade';
                     this.fallSpeedY = 0;
                 }
@@ -453,7 +402,7 @@
                     this.x += dx * cfg.formingSpeed;
                     this.y += dy * cfg.formingSpeed;
                     
-                    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
+                    if (Math.abs(dx) < 0.8 && Math.abs(dy) < 0.8) {
                         this.x = this.targetX;
                         this.y = this.targetY;
                         this.phase = 'hold';
@@ -464,15 +413,19 @@
                     this.y = this.targetY + (Math.random() - 0.5) * 0.3;
                     this.holdTime++;
                     
+                    // Only auto-fade if not final and hold time exceeded
                     if (!this.isFinal && this.holdTime >= this.maxHoldTime) {
                         this.phase = 'fade';
                         this.fallSpeedY = 0;
                     }
                 } else if (this.phase === 'fade') {
+                    // Falling and fading effect
                     this.fallSpeedY += cfg.fallAcceleration;
                     this.y += cfg.fallSpeed + this.fallSpeedY;
                     this.x += this.fallSpeedX + (Math.random() - 0.5) * cfg.fallDrift;
                     this.alpha -= cfg.fadeSpeed;
+                    
+                    // Add some sparkle effect while falling
                     this.size = cfg.particleSize * (0.5 + Math.random() * 0.5);
                 }
             }
@@ -493,7 +446,7 @@
             constructor(targetX, targetY) {
                 const cfg = CONFIG.mainFireworks;
                 
-                this.x = fireworksCanvas.width / 2 + (Math.random() - 0.5) * 100;
+                this.x = fireworksCanvas.width / 2 + (Math.random() - 0.5) * 120;
                 this.y = fireworksCanvas.height + 10;
                 this.targetX = targetX;
                 this.targetY = targetY;
@@ -546,8 +499,6 @@
         let isShowingMessage = false;
         let canLaunchNext = true;
         let holdFrameCount = 0;
-        let formSoundPlayed = false;
-        let isLaunching = false;
 
         // ==================== TEXT HELPERS ====================
         function wrapText(ctx, text, maxWidth) {
@@ -579,15 +530,7 @@
             const tempCtx = tempCanvas.getContext('2d');
             
             const maxWidth = fireworksCanvas.width * cfg.maxWidthRatio;
-            
-            // Calculate dynamic font size based on text length
             let fontSize = Math.min(cfg.maxFontSize, fireworksCanvas.width / cfg.fontSizeRatio);
-            if (text.length > 50) {
-                fontSize = Math.max(cfg.minFontSize, fontSize * 0.8);
-            }
-            if (text.length > 80) {
-                fontSize = Math.max(cfg.minFontSize, fontSize * 0.85);
-            }
             
             tempCtx.font = `bold ${fontSize}px Arial`;
             const lines = wrapText(tempCtx, text, maxWidth);
@@ -601,8 +544,8 @@
                 if (w > maxLineWidth) maxLineWidth = w;
             });
             
-            tempCanvas.width = Math.max(maxLineWidth + 40, 100);
-            tempCanvas.height = Math.max(totalHeight + 40, 60);
+            tempCanvas.width = Math.max(maxLineWidth + 30, 100);
+            tempCanvas.height = Math.max(totalHeight + 30, 50);
             
             tempCtx.font = `bold ${fontSize}px Arial`;
             tempCtx.fillStyle = '#fff';
@@ -610,7 +553,7 @@
             tempCtx.textBaseline = 'middle';
             
             lines.forEach((line, i) => {
-                const y = (i + 0.5) * lineHeight + 20;
+                const y = (i + 0.5) * lineHeight + 15;
                 tempCtx.fillText(line, tempCanvas.width / 2, y);
             });
             
@@ -634,17 +577,15 @@
         }
 
         function triggerCurrentMessageFade() {
+            // Make all particles of current message start fading
             particles.forEach(p => {
-                if (!p.isFinal) {
+                if (p.messageId === currentMessageId && !p.isFinal) {
                     p.triggerFade();
                 }
             });
         }
 
         function launchFireworks(text, isFinal) {
-            if (isLaunching) return;
-            isLaunching = true;
-            
             const cfg = CONFIG.mainFireworks;
             const delayCfg = CONFIG.delays;
             
@@ -653,12 +594,8 @@
             
             const textPositions = getTextParticles(text, centerX, centerY);
             
-            updateProgress(currentMessageIndex, CONFIG.messages.length);
-            
             if (textPositions.length === 0) {
-                console.log('No positions for:', text);
-                isLaunching = false;
-                setTimeout(() => proceedToNextMessage(), 100);
+                console.log('No positions found for:', text);
                 return;
             }
             
@@ -669,7 +606,7 @@
             
             const rocketTargets = [];
             for (let i = 0; i < rocketCount; i++) {
-                const offsetX = (i - (rocketCount - 1) / 2) * 40;
+                const offsetX = (i - (rocketCount - 1) / 2) * 50;
                 rocketTargets.push({ x: centerX + offsetX, y: centerY });
             }
             
@@ -678,9 +615,7 @@
             isShowingMessage = true;
             canLaunchNext = false;
             holdFrameCount = 0;
-            formSoundPlayed = false;
             
-            let launchedCount = 0;
             rocketTargets.forEach((target, idx) => {
                 setTimeout(() => {
                     playLaunchSound();
@@ -691,10 +626,6 @@
                     rocket.isFinal = isFinal;
                     rocket.messageId = messageId;
                     rockets.push(rocket);
-                    launchedCount++;
-                    if (launchedCount >= rocketCount) {
-                        isLaunching = false;
-                    }
                 }, idx * delayCfg.rocketLaunchInterval);
             });
         }
@@ -707,26 +638,6 @@
                 const p = new Particle(rocket.x, rocket.y, pos.x, pos.y, rocket.messageId);
                 p.isFinal = rocket.isFinal;
                 particles.push(p);
-            }
-        }
-
-        function proceedToNextMessage() {
-            if (isLaunching) return;
-            
-            currentMessageIndex++;
-            
-            if (currentMessageIndex < CONFIG.messages.length) {
-                const isFinal = currentMessageIndex === CONFIG.messages.length - 1;
-                
-                triggerCurrentMessageFade();
-                
-                setTimeout(() => {
-                    formSoundPlayed = false;
-                    launchFireworks(CONFIG.messages[currentMessageIndex], isFinal);
-                }, CONFIG.delays.nextMessageDelay);
-            } else {
-                // All messages done
-                updateProgress(CONFIG.messages.length - 1, CONFIG.messages.length);
             }
         }
 
@@ -793,7 +704,7 @@
                 setInterval(playChord, cfg.chordInterval);
 
             } catch (e) {
-                console.log('Audio init failed:', e);
+                console.log('Audio failed:', e);
             }
         }
 
@@ -830,6 +741,8 @@
         }
 
         // ==================== ANIMATION LOOP ====================
+        let formSoundPlayed = false;
+
         function checkAllFormed() {
             const currentParticles = particles.filter(p => p.messageId === currentMessageId);
             if (currentParticles.length === 0) return false;
@@ -863,23 +776,39 @@
                 p.draw();
             });
 
-            // Play form sound
+            // Play form sound when all particles are formed
             if (!formSoundPlayed && checkAllFormed() && particles.length > 0) {
                 formSoundPlayed = true;
-                setTimeout(playFormSound, CONFIG.delays.formSoundDelay);
+                setTimeout(() => {
+                    playFormSound();
+                }, CONFIG.delays.formSoundDelay);
             }
 
-            // Trigger next message
-            if (isShowingMessage && !canLaunchNext && !isLaunching && checkAllHolding()) {
+            // Count hold frames and trigger next message
+            if (isShowingMessage && !canLaunchNext && checkAllHolding()) {
                 holdFrameCount++;
                 
+                // After holding for specified frames, trigger fade and launch next
                 if (holdFrameCount >= CONFIG.delays.triggerNextAfterHoldFrames) {
                     canLaunchNext = true;
-                    proceedToNextMessage();
+                    
+                    currentMessageIndex++;
+                    if (currentMessageIndex < CONFIG.messages.length) {
+                        const isFinal = currentMessageIndex === CONFIG.messages.length - 1;
+                        
+                        // Trigger current text to fade
+                        triggerCurrentMessageFade();
+                        
+                        // Launch next firework with delay
+                        setTimeout(() => {
+                            formSoundPlayed = false;
+                            launchFireworks(CONFIG.messages[currentMessageIndex], isFinal);
+                        }, CONFIG.delays.nextMessageDelay);
+                    }
                 }
             }
 
-            // Cleanup particles
+            // Clean up dead particles (but keep final ones)
             particles = particles.filter(p => p.alpha > 0 || p.isFinal);
 
             requestAnimationFrame(animate);
@@ -889,11 +818,8 @@
         async function start() {
             await initAudio();
             
-            console.log(`Starting fireworks with ${CONFIG.messages.length} messages`);
-            updateProgress(0, CONFIG.messages.length);
-            
             setTimeout(() => {
-                launchFireworks(CONFIG.messages[0], CONFIG.messages.length === 1);
+                launchFireworks(CONFIG.messages[0], false);
             }, CONFIG.delays.startDelay);
         }
 
@@ -907,3 +833,4 @@
     </script>
 </body>
 </html>
+```
